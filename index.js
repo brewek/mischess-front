@@ -1,3 +1,4 @@
+var lambda_url = "https://z78mv32t5l.execute-api.eu-central-1.amazonaws.com/Prod";
 last_game = get_last_game();
 
 function prettyDate(date) {
@@ -42,15 +43,15 @@ recreate_board();
 
 function get_last_game() {
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("GET", "https://z78mv32t5l.execute-api.eu-central-1.amazonaws.com/Prod/opening", false); // false for synchronous request
+    xmlHttp.open("GET", `${lambda_url}/opening`, false); // false for synchronous request
     xmlHttp.send(null);
     return JSON.parse(xmlHttp.responseText);
 }
 
-function refresh() {
-    recreate_board();
-    notify();
-}
+// function refresh() {
+//     recreate_board();
+//     notify();
+// }
 
 // function check_last_game() {
 //     lg = get_last_game();
@@ -72,16 +73,16 @@ function import_last_game() {
             console.log(xhr.responseText)
         }
     }
-    xhr.open('post', 'https://z78mv32t5l.execute-api.eu-central-1.amazonaws.com/Prod/import', false);
+    xhr.open('post', `${lambda_url}/import`, false);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-    xhr.send(last_game.pgn);
+    xhr.send(last_game.game.pgn);
 }
 
-Notification.requestPermission().then((result) => {
-    console.log(result);
-});
+// Notification.requestPermission().then((result) => {
+//     console.log(result);
+// });
 
-function notify() {
-    const text = `HEY! Check your last game.`;
-    const notification = new Notification("To do list", { body: text });
-}
+// function notify() {
+//     const text = `HEY! Check your last game.`;
+//     const notification = new Notification("To do list", { body: text });
+// }
