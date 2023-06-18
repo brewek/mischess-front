@@ -24,6 +24,9 @@ game_ended = new Date(last_game.game.game_ended)
 title.innerHTML = `${prettyDate(game_ended)}: ${white.username} (${white.rating}) vs ${black.username} (${black.rating})`
 function recreate_board() {
     var board = Chessboard2("chessboard", last_game.FEN);
+    if (!last_game.game.viewer) {
+        board.flip()
+    }
     board.addArrow({
         color: 'red',
         start: last_game.MovePlayed.substring(0, 2),
