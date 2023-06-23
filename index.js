@@ -1,4 +1,36 @@
 var lambda_url = "https://z78mv32t5l.execute-api.eu-central-1.amazonaws.com/Prod";
+
+function getCookie(cname) {
+    let name = cname + "=";
+    let decodedCookie = decodeURIComponent(document.cookie);
+    let ca = decodedCookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
+function get_user() {
+    auth_cookie = getCookie("token");
+    if (!auth_cookie) {
+        window.location.replace("login.html");
+    }
+    console.log(auth_cookie)
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", `${lambda_url}/users/me`, false); // false for synchronous request
+    xmlHttp.send(null);
+    return JSON.parse(xmlHttp.responseText);
+};
+
+user = get_user();
+
+
 last_game = get_last_game();
 
 function prettyDate(date) {
