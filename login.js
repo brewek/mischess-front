@@ -1,5 +1,4 @@
-get_user().catch(err => {
-    console.error(err)
+get_user().then(user => {
     window.location.replace("/");
 });
 
