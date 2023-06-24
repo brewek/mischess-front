@@ -1,6 +1,4 @@
-get_user().then(user => {
-    console.log(user)
-}).catch(err => {
+get_user().catch(err => {
     console.error(err)
     window.location.replace("login.html");
 });

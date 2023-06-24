@@ -9,7 +9,6 @@ function setCookie(cname, cvalue, exdays) {
 $('#login-form').submit(function () {
     getToken($('#login-form').serialize())
         .then((token) => {
-            console.log(token)
             setCookie("token", JSON.stringify(token), 180)
             window.location.replace("")
         })
