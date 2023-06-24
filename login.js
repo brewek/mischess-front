@@ -1,3 +1,8 @@
+get_user().catch(err => {
+    console.error(err)
+    window.location.replace("/");
+});
+
 function setCookie(cname, cvalue, exdays) {
     const d = new Date();
     d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
@@ -10,7 +15,7 @@ $('#login-form').submit(function () {
     getToken($('#login-form').serialize())
         .then((token) => {
             setCookie("token", JSON.stringify(token), 180)
-            window.location.replace("")
+            window.location.replace("/")
         })
         .catch(err => { console.error({ message: "failed to login", error: err.message }) })
     return false;
