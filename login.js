@@ -1,20 +1,33 @@
-login_form = document.getElementById("login-form")
-login_form.addEventListener('submit', function () {
-    username = document.getElementById("username").value
-    password = document.getElementById("password").value
-    token = getToken(username, password)
-    console.log(username + "/" + password + " - " + token)
+function setCookie(cname, cvalue, exdays) {
+    const d = new Date();
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+    let expires = "expires=" + d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+
+$('#login-form').submit(function () {
+    getToken($('#login-form').serialize())
+        .then((token) => {
+            console.log(token)
+            setCookie("token", JSON.stringify(token), 180)
+            window.location.replace("")
+        })
+        .catch(err => { console.error({ message: "failed to login", error: err.message }) })
     return false;
 });
 
-var lambda_url = "https://z78mv32t5l.execute-api.eu-central-1.amazonaws.com/Prod";
-function getToken(username, password) {
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("POST", `${lambda_url}/token`, false); // false for synchronous request
-    body = `username=${username}&password=${password}`
-    xmlHttp.send(body);
-    // TODO: do proper login, set cookie, handle in index.js
-    console.log(body)
-    console.log(xmlHttp.responseText)
-    return JSON.parse(xmlHttp.responseText);
+async function getToken(body) {
+    var token
+    let response = await fetch(`${lambda_url}/token`, {
+        method: "POST",
+        mode: "cors",
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body,
+    })
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
+    token = await response.json()
+    return token
 }

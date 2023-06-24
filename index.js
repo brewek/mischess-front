@@ -1,37 +1,14 @@
-var lambda_url = "https://z78mv32t5l.execute-api.eu-central-1.amazonaws.com/Prod";
-
-function getCookie(cname) {
-    let name = cname + "=";
-    let decodedCookie = decodeURIComponent(document.cookie);
-    let ca = decodedCookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) == ' ') {
-            c = c.substring(1);
-        }
-        if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
-        }
-    }
-    return "";
-}
-
-function get_user() {
-    auth_cookie = getCookie("token");
-    if (!auth_cookie) {
-        window.location.replace("login.html");
-    }
-    console.log(auth_cookie)
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("GET", `${lambda_url}/users/me`, false); // false for synchronous request
-    xmlHttp.send(null);
-    return JSON.parse(xmlHttp.responseText);
-};
-
-user = get_user();
+get_user().then(user => {
+    console.log(user)
+}).catch(err => {
+    console.error(err)
+    window.location.replace("login.html");
+});
 
 
-last_game = get_last_game();
+get_last_game().then(last_game => {
+    update_page(last_game)
+}).catch(err => { console.error(err) });
 
 function prettyDate(date) {
     now = new Date();
@@ -43,18 +20,22 @@ function prettyDate(date) {
     return date.toDateString();
 }
 
-if (last_game.game.url.indexOf("lichess.org") > -1) {
-    lichess_import_button = document.getElementById("lichess_import");
-    lichess_import_button.disabled = true
+function update_page(last_game) {
+    if (last_game.game.url.indexOf("lichess.org") > -1) {
+        lichess_import_button = document.getElementById("lichess_import");
+        lichess_import_button.disabled = true
+    }
+
+    title = document.getElementById("title");
+    title.href = last_game.game.url
+    white = last_game.game.players.white
+    black = last_game.game.players.black
+    game_ended = new Date(last_game.game.game_ended)
+    title.innerHTML = `${prettyDate(game_ended)}: ${white.username} (${white.rating}) vs ${black.username} (${black.rating})`
+    recreate_board(last_game);
 }
 
-title = document.getElementById("title");
-title.href = last_game.game.url
-white = last_game.game.players.white
-black = last_game.game.players.black
-game_ended = new Date(last_game.game.game_ended)
-title.innerHTML = `${prettyDate(game_ended)}: ${white.username} (${white.rating}) vs ${black.username} (${black.rating})`
-function recreate_board() {
+function recreate_board(last_game) {
     var board = Chessboard2("chessboard", last_game.FEN);
     if (!last_game.game.viewer) {
         board.flip()
@@ -74,29 +55,17 @@ function recreate_board() {
         })
     }
 };
-recreate_board();
 
-function get_last_game() {
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("GET", `${lambda_url}/opening`, false); // false for synchronous request
-    xmlHttp.send(null);
-    return JSON.parse(xmlHttp.responseText);
+async function get_last_game() {
+    token = get_token()
+    let response = await fetch(`${lambda_url}/opening`, {
+        headers: { Authorization: `${token.token_type} ${token.access_token}` }
+    })
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
+    return await response.json()
 }
-
-// function refresh() {
-//     recreate_board();
-//     notify();
-// }
-
-// function check_last_game() {
-//     lg = get_last_game();
-//     if (lg.FEN != last_game.FEN) {
-//         last_game = lg;
-//         refresh();
-//     }
-//     setTimeout(check_last_game, 30000);
-// }
-// setTimeout(check_last_game, 0);
 
 function import_last_game() {
     var xhr = new XMLHttpRequest();
@@ -112,12 +81,3 @@ function import_last_game() {
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
     xhr.send(last_game.game.pgn);
 }
-
-// Notification.requestPermission().then((result) => {
-//     console.log(result);
-// });
-
-// function notify() {
-//     const text = `HEY! Check your last game.`;
-//     const notification = new Notification("To do list", { body: text });
-// }
