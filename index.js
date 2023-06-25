@@ -58,7 +58,7 @@ function recreate_board(game) {
 
 async function get_last_game() {
     token = get_token()
-    let response = await fetch(`${lambda_url}/opening`, {
+    let response = await fetch(`${lambda_url}/games/opening`, {
         headers: { Authorization: `${token.token_type} ${token.access_token}` }
     })
     if (!response.ok) {
@@ -79,7 +79,7 @@ $('#lichess_import').on('click', function () {
 
 async function import_game(game) {
 
-    let response = await fetch(`${lambda_url}/import`, {
+    let response = await fetch(`${lambda_url}/games/import`, {
         method: "POST",
         headers: {
             Authorization: `${token.token_type} ${token.access_token}`,
