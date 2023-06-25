@@ -58,7 +58,7 @@ function recreate_board(game) {
 
 async function get_last_game() {
     token = get_token()
-    let response = await fetch(`${lambda_url}/games/opening`, {
+    let response = await fetch(`${lambda_url}/users/me/games/opening`, {
         headers: { Authorization: `${token.token_type} ${token.access_token}` }
     })
     if (!response.ok) {
@@ -72,24 +72,27 @@ $('#lichess_import').on('click', function () {
     import_game(last_known_game).then(url => {
         window.open(url);
     }).catch(err => {
-        log.error(err);
+        console.error(err);
     })
     return false;
 });
 
 async function import_game(game) {
 
-    let response = await fetch(`${lambda_url}/games/import`, {
+    let response = await fetch("https://lichess.org/api/import", {
         method: "POST",
         headers: {
-            Authorization: `${token.token_type} ${token.access_token}`,
+            "Accept": "application/json",
             "Content-Type": 'application/x-www-form-urlencoded; charset=UTF-8'
         },
-        body: game.game.pgn
+        redirect: 'manual',
+        body: "pgn=" + encodeURIComponent(game.game.pgn)
     })
 
     if (!response.ok) {
-        throw new Error(await response.text());
+        throw new Error("error importing game to lichess: " + await response.text());
     }
-    return response.text()
+    resp = await response.json()
+    console.log(resp.url)
+    return resp.url
 }
