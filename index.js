@@ -36,17 +36,17 @@ function update_page(game) {
 }
 
 function recreate_board(game) {
-    var board = Chessboard2("chessboard", game.FEN);
+    var board = Chessboard2("chessboard", game.fen);
     if (!game.game.viewer) {
         board.flip()
     }
     board.addArrow({
         color: 'red',
-        start: game.MovePlayed.substring(0, 2),
-        end: game.MovePlayed.substring(2),
+        start: game.move_played.substring(0, 2),
+        end: game.move_played.substring(2),
         opacity: 0.35
     })
-    for (move of game.ExpectedMoves) {
+    for (move of game.expected_moves) {
         board.addArrow({
             color: 'green',
             start: move.substring(0, 2),
