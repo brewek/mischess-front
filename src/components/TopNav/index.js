@@ -20,7 +20,8 @@ function ResponsiveAppBar(props) {
   const navigate = useNavigate()
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
-  const [cookies, setCookies] = useCookies();
+  // eslint-disable-next-line
+  const [cookies, setCookies, removeCookie] = useCookies();
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -41,9 +42,8 @@ function ResponsiveAppBar(props) {
   };
 
   const handleSignOut = () => {
-    let newCookies = { ...cookies };
-    delete newCookies['token'];
-    setCookies(newCookies);
+    removeCookie('token', {path: '/'});
+    props.setUser(null);
   }
 
   const pages = [{

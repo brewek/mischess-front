@@ -28,7 +28,8 @@ export default function SignInForm(props) {
     password: '',
     passwordError: '',
   });
-  const { setCookies } = useCookies();
+  // eslint-disable-next-line
+  const [cookies, setCookies] = useCookies();
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate()
 
