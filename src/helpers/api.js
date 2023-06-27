@@ -1,5 +1,3 @@
-import { async } from "q";
-
 const API_URL = "https://api.the226.pl";
 
 /**

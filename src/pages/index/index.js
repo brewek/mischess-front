@@ -33,6 +33,7 @@ export default function IndexPage(props) {
     return () => {
       ignore = true;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cookies.token]);
 
   return (

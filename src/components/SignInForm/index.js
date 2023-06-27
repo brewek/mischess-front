@@ -28,10 +28,9 @@ export default function SignInForm(props) {
     password: '',
     passwordError: '',
   });
-  const [cookies, setCookies] = useCookies();
+  const { setCookies } = useCookies();
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate()
-  const { apiUrl } = props;
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
