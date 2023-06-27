@@ -11,8 +11,6 @@ import SignUpPage from './pages/sign-up';
 import ErrorPage from './pages/error';
 import SuccessPage from './pages/success';
 
-const apiUrl = "https://api.the226.pl";
-
 function App() {
   const [user, setUser] = React.useState(null);
 

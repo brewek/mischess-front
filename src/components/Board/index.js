@@ -7,8 +7,7 @@ import { getOpening } from "../../helpers/api";
 export default function Board(props) {
   const [game, setGame] = useState();
   const [arrows, setArrows] = useState();
-  const [current, setCurrent] = useState()
-  const [cookies, setCookies] = useCookies();
+  const [cookies] = useCookies();
   const navigate = useNavigate()
 
   const separateMoves = (move) => {
@@ -19,10 +18,8 @@ export default function Board(props) {
   }
 
   const updateArrows = async (lastGame) => {
-    let played = separateMoves(lastGame.move_played);
     let moves = lastGame.expected_moves.map((item) => separateMoves(item));
 
-    setCurrent([played]);
     setArrows(moves);
   }
 
@@ -59,6 +56,7 @@ export default function Board(props) {
     return () => {
       ignore = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
