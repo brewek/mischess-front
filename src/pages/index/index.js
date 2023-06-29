@@ -52,6 +52,10 @@ export default function IndexPage(props) {
   }
 
   const resetArrows = () => {
+    setGameConfig({
+      ...gameConfig,
+      position: game.fen,
+    })
     setArrows(getArrows(game));
   }
 

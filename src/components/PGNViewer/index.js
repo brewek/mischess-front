@@ -35,6 +35,7 @@ export default function PGNViewer(props) {
       tempChess.move(move);
       let fen = tempChess.fen()
       return {
+        index: idx,
         move,
         fen
       }
@@ -72,8 +73,8 @@ export default function PGNViewer(props) {
             return idx % 2 === 0;
           }).map((item, idx) => {
             return (
-              <ListItem key={`odd-${idx}`}>
-                <ListItemButton onClick={() => changeFen(idx)} key={idx} >
+              <ListItem key={item.index}>
+                <ListItemButton onClick={() => changeFen(item.index)} >
                   <ListItemText>
                     {item.move}    
                   </ListItemText>
@@ -100,8 +101,8 @@ export default function PGNViewer(props) {
             return idx % 2 !== 0;
           }).map((item, idx) => {
             return (
-              <ListItem key={`even-${idx}`}>
-                <ListItemButton onClick={() => changeFen(idx)} key={idx} >
+              <ListItem key={item.index}>
+                <ListItemButton onClick={() => changeFen(item.index)}>
                   <ListItemText>
                     {item.move}    
                   </ListItemText>
