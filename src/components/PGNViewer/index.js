@@ -21,14 +21,11 @@ export default function PGNViewer(props) {
   }
 
   useEffect(() => {
-    console.log(props.pgn);
-    
     if (!props.pgn)
       return () => {};
 
     let chess = new Chess()
     chess.loadPgn(props.pgn);
-    console.log(chess.history());
 
     let tempChess = new Chess()
     let moves = chess.history().map((move, idx) => {

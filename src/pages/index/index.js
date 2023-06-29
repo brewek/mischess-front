@@ -104,7 +104,6 @@ export default function IndexPage(props) {
         let me = await response.json();
         props.setUser(me);
         
-        console.log(boardRef.current);
         setHeight(boardRef.current.offsetHeight);
         fetchLastOpening(token, me.username);
       }
