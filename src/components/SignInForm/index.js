@@ -75,7 +75,11 @@ export default function SignInForm(props) {
     let body = await response.json();
     let type = `${body.token_type}`.charAt(0).toUpperCase() + `${body.token_type}`.substring(1);
 
-    setCookies('token', `${type} ${body.access_token}`, {path: '/'});
+    setCookies('token', `${type} ${body.access_token}`, {
+      path: '/',
+      maxAge: 7776000,
+      sameSite: 'strict'
+    });
     navigate('/');
   }
 
