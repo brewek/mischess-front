@@ -1,19 +1,34 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
-import { Container } from "@mui/system";
+import { 
+  Grid,
+  Container,
+  FormControl,
+  Button
+} from "@mui/material";
 import { getOpening, getUser } from "../../helpers/api";
+
 import Board from "../../components/ChessBoard";
+import PGNViewer from "../../components/PGNViewer";
 
 
 export default function IndexPage(props) {
   const [cookies] = useCookies();
+  const [game, setGame] = useState({});
+  const [players, setPlayers] = useState({
+    white: '',
+    black: ''
+  });
   const [gameConfig, setGameConfig] = useState({
     'orientation': 'white',
     'position': 'start'
   });
+  const [pgn, setPgn] = useState('');
   const [arrows, setArrows] = useState([]);
+  const [height, setHeight] = useState(0);
   const navigate = useNavigate();
+  const boardRef = useRef();
 
   const separateMoves = (move, color, size) => {
     let from = move.substring(0, 2);
@@ -32,6 +47,18 @@ export default function IndexPage(props) {
     return arrows
   }
 
+  const clearArrows = () => {
+    setArrows([]);
+  }
+
+  const resetArrows = () => {
+    setGameConfig({
+      ...gameConfig,
+      position: game.fen,
+    })
+    setArrows(getArrows(game));
+  }
+
   const fetchLastOpening = async (token, username) => {
     let response = await getOpening(token);
     if (!response.ok) {
@@ -40,7 +67,8 @@ export default function IndexPage(props) {
     }
 
     let lastGame = await response.json();
-
+    
+    setGame(lastGame);
     setArrows(getArrows(lastGame));
 
     if (!lastGame) {
@@ -48,10 +76,15 @@ export default function IndexPage(props) {
       return;
     }
 
+    setPlayers({
+      white: lastGame.game.players.white,
+      black: lastGame.game.players.black
+    })
+    setPgn(lastGame.game.pgn);
     setGameConfig({
       ...gameConfig,
       position: lastGame.fen,
-      orientation: lastGame.game.players.white.username === username ? 'white' : 'black'
+      orientation: lastGame.game.players.white.username === username ? 'white' : 'black',
     });
   }
 
@@ -71,6 +104,7 @@ export default function IndexPage(props) {
         let me = await response.json();
         props.setUser(me);
         
+        setHeight(boardRef.current.offsetHeight);
         fetchLastOpening(token, me.username);
       }
     }
@@ -84,8 +118,28 @@ export default function IndexPage(props) {
   }, [cookies.token]);
 
   return (
-    <Container maxWidth="sm">
-      <Board config={gameConfig} arrows={arrows} />
+    <Container maxWidth="md">
+      <Grid container >
+        <Grid item xs={8} ref={boardRef} >
+          <Board config={gameConfig} arrows={arrows} />
+        </Grid>
+        <Grid item xs={4} >
+          <PGNViewer 
+            gameConfig={gameConfig} 
+            setGameConfig={setGameConfig} 
+            pgn={pgn} 
+            players={players}
+            height={height ? height : 0}
+            clearArrows={clearArrows}
+            resetArrows={resetArrows}
+          />
+        </Grid>
+      </Grid>
+      <FormControl fullWidth >
+        <Button variant='text' onClick={resetArrows}>
+          Reset
+        </Button>
+      </FormControl>
     </Container>
   );
 }
