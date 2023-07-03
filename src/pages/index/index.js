@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
-import { 
+import {
   Grid,
   Container,
   FormControl,
@@ -30,20 +30,19 @@ export default function IndexPage(props) {
   const navigate = useNavigate();
   const boardRef = useRef();
 
-  const separateMoves = (move, color, size) => {
-    let from = move.substring(0, 2);
-    let to = move.substring(2);
-
+  const createArrow = (move, color) => {
     return {
-      direction: `${from}-${to}`,
+      from: move.substring(0, 2),
+      to: move.substring(2),
       color,
-      size
+      size: "medium",
+      opacity: 0.35
     };
   }
 
   const getArrows = (lastGame) => {
-    let arrows = lastGame.expected_moves.map((item) => separateMoves(item, 'blue', 'small'));
-    arrows = arrows.concat(separateMoves(lastGame.move_played, 'red', 'small'));
+    let arrows = lastGame.expected_moves.map((item) => createArrow(item, 'green'));
+    arrows = arrows.concat(createArrow(lastGame.move_played, 'red'));
     return arrows
   }
 
@@ -62,12 +61,12 @@ export default function IndexPage(props) {
   const fetchLastOpening = async (token, username) => {
     let response = await getOpening(token);
     if (!response.ok) {
-      console.log(response);
+      console.error(response);
       return;
     }
 
     let lastGame = await response.json();
-    
+
     setGame(lastGame);
     setArrows(getArrows(lastGame));
 
@@ -103,18 +102,18 @@ export default function IndexPage(props) {
 
         let me = await response.json();
         props.setUser(me);
-        
+
         setHeight(boardRef.current.offsetHeight);
         fetchLastOpening(token, me.username);
       }
     }
-  
+
     checkAuthenticated();
-  
+
     return () => {
       ignore = true;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cookies.token]);
 
   return (
@@ -124,10 +123,10 @@ export default function IndexPage(props) {
           <Board config={gameConfig} arrows={arrows} />
         </Grid>
         <Grid item xs={4} >
-          <PGNViewer 
-            gameConfig={gameConfig} 
-            setGameConfig={setGameConfig} 
-            pgn={pgn} 
+          <PGNViewer
+            gameConfig={gameConfig}
+            setGameConfig={setGameConfig}
+            pgn={pgn}
             players={players}
             height={height ? height : 0}
             clearArrows={clearArrows}

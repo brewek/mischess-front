@@ -9,10 +9,10 @@ export default function Board(props) {
     script.onload = () => {
       const chessboard2 = window['Chessboard2']
       const board = chessboard2('board', props.config);
-      
+
       if (props.arrows) {
         props.arrows.forEach((item) => {
-          board.addArrow(item.direction, item.color, item.size);
+          board.addArrow({ start: item.from, end: item.to, color: item.color, size: item.size, opacity: item.opacity });
         })
       }
     };
@@ -22,7 +22,7 @@ export default function Board(props) {
     return () => {
       document.body.removeChild(script)
     }
-  // eslint-disable-next-line:react-hooks/exhaustive-deps
+    // eslint-disable-next-line:react-hooks/exhaustive-deps
   }, [props.config, props.arrows])
 
   return (

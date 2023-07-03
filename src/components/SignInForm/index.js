@@ -42,7 +42,7 @@ export default function SignInForm(props) {
   const submitSignIn = async () => {
     if (!fields.username || !fields.password) {
       setFields({
-        ...fields, 
+        ...fields,
         usernameError: 'Required field',
         passwordError: 'Required field'
       });
@@ -67,11 +67,11 @@ export default function SignInForm(props) {
 
     if (!response.ok) {
       let error = await response.json();
-      console.log(error.detail);
+      console.error(error.detail);
       setAlert(error.detail);
       return
     }
-    
+
     let body = await response.json();
     let type = `${body.token_type}`.charAt(0).toUpperCase() + `${body.token_type}`.substring(1);
 
@@ -94,7 +94,7 @@ export default function SignInForm(props) {
           id="outlined-adornment-amount"
           label="Amount"
           value={fields.username}
-          onChange={(e) => setFields({...fields, username: e.target.value})}
+          onChange={(e) => setFields({ ...fields, username: e.target.value })}
         />
       </FormControl>
       <FormControl fullWidth margin='normal' error={!!fields.passwordError}>
@@ -116,15 +116,15 @@ export default function SignInForm(props) {
           }
           label="Password"
           value={fields.password}
-          onChange={(e) => setFields({...fields, password: e.target.value})}
+          onChange={(e) => setFields({ ...fields, password: e.target.value })}
         />
       </FormControl>
       <FormControl fullWidth margin='normal'>
-        <Button 
-          variant="contained" 
-          disableElevation 
-          onClick={submitSignIn} 
-          disabled={loading}  
+        <Button
+          variant="contained"
+          disableElevation
+          onClick={submitSignIn}
+          disabled={loading}
         >
           Sign In
         </Button>
@@ -137,7 +137,7 @@ export default function SignInForm(props) {
             marginTop: '-12px',
             marginLeft: '-12px',
           }}
-        /> : null }
+        /> : null}
       </FormControl>
       <FormControl fullWidth margin='normal'>
         <Divider>

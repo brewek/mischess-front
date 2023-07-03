@@ -39,28 +39,28 @@ export default function SignUpForm(props) {
 
   const onEmailChange = (e) => {
 
-    setFields({...fields, email: e.target.value});
+    setFields({ ...fields, email: e.target.value });
   }
 
   const onPasswordChange = (e) => {
 
-    setFields({...fields, password: e.target.value});
+    setFields({ ...fields, password: e.target.value });
   }
 
   const onPasswordRepeatChange = (e) => {
 
-    setFields({...fields, passwordRepeat: e.target.value});
+    setFields({ ...fields, passwordRepeat: e.target.value });
   }
 
   const onUsernameChange = (e) => {
 
-    setFields({...fields, username: e.target.value});
+    setFields({ ...fields, username: e.target.value });
   }
 
   const submitForm = async (e) => {
     setLoading(true);
 
-    let newFields = {...fields};
+    let newFields = { ...fields };
     setFields({
       ...fields,
       usernameError: '',
@@ -92,21 +92,19 @@ export default function SignUpForm(props) {
     }
 
     let res = await signUp({
-        username: fields.username,
-        password: fields.password,
-        verify_password: fields.passwordRepeat,
-        email: fields.email
+      username: fields.username,
+      password: fields.password,
+      verify_password: fields.passwordRepeat,
+      email: fields.email
     });
 
     if (!res.ok) {
+      let body = await res.json()
+      console.error(body);
       setAlert("Registration failed");
       setLoading(false);
       return;
     }
-
-    let body = await res.json()
-    console.log(body);
-
     setLoading(false);
     navigate('/success');
   }
@@ -179,7 +177,7 @@ export default function SignUpForm(props) {
             marginTop: '-12px',
             marginLeft: '-12px',
           }}
-        /> : null }
+        /> : null}
       </FormControl>
     </Box>
   )
