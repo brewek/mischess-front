@@ -46,8 +46,17 @@ async function getUser(token) {
    });
 }
 
-async function getOpening(token) {
-  return fetch(`${API_URL}/users/me/games/opening`, {
+async function getGames(token) {
+  return fetch(`${API_URL}/users/me/games/`, {
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json'
+    }
+  });
+}
+
+async function getOpening(token, index = -1) {
+  return fetch(`${API_URL}/users/me/games/opening?index=${index}`, {
     headers: {
       Authorization: token,
       'Content-Type': 'application/json'
@@ -59,5 +68,6 @@ export {
   signIn,
   signUp,
   getUser,
+  getGames,
   getOpening
 }
