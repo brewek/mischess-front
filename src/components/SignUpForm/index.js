@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useTheme } from '@mui/material/styles';
 import {
   Box,
   FormControl,
@@ -20,7 +19,6 @@ import { useNavigate } from 'react-router';
 import { signUp } from '../../helpers/api';
 
 export default function SignUpForm(props) {
-  const theme = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [alert, setAlert] = useState(false);
   const [loading, setLoading] = useState(false);

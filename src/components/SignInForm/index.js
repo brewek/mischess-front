@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useTheme } from '@mui/material/styles';
 import {
   Box,
   FormControl,
@@ -24,7 +23,6 @@ import { signIn } from '../../helpers/api';
 
 
 export default function SignInForm(props) {
-  const theme = useTheme();
   const [alert, setAlert] = useState('');
   const [loading, setLoading] = useState(false);
   const [fields, setFields] = useState({
