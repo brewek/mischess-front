@@ -9,9 +9,12 @@ import {
   Container,
   Button,
   Tooltip,
-  MenuItem
+  MenuItem,
+  Divider
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
 import { useNavigate } from 'react-router';
 import { useCookies } from 'react-cookie';
 
@@ -42,7 +45,7 @@ function ResponsiveAppBar(props) {
   };
 
   const handleSignOut = () => {
-    removeCookie('token', {path: '/'});
+    removeCookie('token', { path: '/' });
     props.setUser(null);
   }
 
@@ -50,7 +53,7 @@ function ResponsiveAppBar(props) {
     name: 'Home',
     path: '/'
   }];
-  
+
   const settings = [];
 
   return (
@@ -126,17 +129,32 @@ function ResponsiveAppBar(props) {
               }}
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
-            > 
+            >
               {settings.map((setting) => (
                 <MenuItem key={setting} onClick={handleCloseNavMenu}>
                   <Typography textAlign="center">{setting}</Typography>
                 </MenuItem>
               ))}
+              <Divider sx={{ mx: 1 }} />
+              <MenuItem onClick={() => props.setDarkMode(!props.darkMode)}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  {props.darkMode ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+                  <Typography>{props.darkMode ? 'Light Mode' : 'Dark Mode'}</Typography>
+                </Box>
+              </MenuItem>
               <MenuItem onClick={handleSignOut}>
                 <Typography textAlign="center">Sign Out</Typography>
               </MenuItem>
             </Menu>
-          </Box> : null}
+          </Box> : (
+            <Box sx={{ flexGrow: 0 }}>
+              <Tooltip title="Toggle theme">
+                <IconButton onClick={() => props.setDarkMode(!props.darkMode)} color="inherit">
+                  {props.darkMode ? <LightModeIcon /> : <DarkModeIcon />}
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
         </Toolbar>
       </Container>
     </AppBar>

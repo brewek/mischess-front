@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTheme } from '@mui/material/styles';
 import {
   Box,
   FormControl,
@@ -10,7 +11,10 @@ import {
   Divider,
   Chip,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Typography,
+  Card,
+  CardContent
 } from '@mui/material';
 import { useNavigate } from 'react-router';
 import { useCookies } from "react-cookie";
@@ -20,6 +24,7 @@ import { signIn } from '../../helpers/api';
 
 
 export default function SignInForm(props) {
+  const theme = useTheme();
   const [alert, setAlert] = useState('');
   const [loading, setLoading] = useState(false);
   const [fields, setFields] = useState({
@@ -83,72 +88,91 @@ export default function SignInForm(props) {
     navigate('/');
   }
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    submitSignIn();
+  };
+
   return (
-    <Box>
-      {alert ? <FormControl fullWidth margin='normal'>
-        <Alert severity="error">Error: {alert}</Alert>
-      </FormControl> : null}
-      <FormControl fullWidth margin='normal' error={!!fields.usernameError}>
-        <InputLabel htmlFor="outlined-adornment-username">Username</InputLabel>
-        <OutlinedInput
-          id="outlined-adornment-amount"
-          label="Amount"
-          value={fields.username}
-          onChange={(e) => setFields({ ...fields, username: e.target.value })}
-        />
-      </FormControl>
-      <FormControl fullWidth margin='normal' error={!!fields.passwordError}>
-        <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
-        <OutlinedInput
-          id="outlined-adornment-password"
-          type={showPassword ? 'text' : 'password'}
-          endAdornment={
-            <InputAdornment position="end">
-              <IconButton
-                aria-label="toggle password visibility"
-                onClick={handleClickShowPassword}
-                onMouseDown={handleMouseDownPassword}
-                edge="end"
-              >
-                {showPassword ? <VisibilityOff /> : <Visibility />}
-              </IconButton>
-            </InputAdornment>
-          }
-          label="Password"
-          value={fields.password}
-          onChange={(e) => setFields({ ...fields, password: e.target.value })}
-        />
-      </FormControl>
-      <FormControl fullWidth margin='normal'>
-        <Button
-          variant="contained"
-          disableElevation
-          onClick={submitSignIn}
-          disabled={loading}
-        >
+    <Card elevation={4} sx={{ borderRadius: 3, mt: 4 }}>
+      <CardContent sx={{ pt: 4 }}>
+        <Typography variant="h5" align="center" gutterBottom fontWeight="bold" color="primary.main">
           Sign In
-        </Button>
-        {loading ? <CircularProgress
-          size={24}
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            marginTop: '-12px',
-            marginLeft: '-12px',
-          }}
-        /> : null}
-      </FormControl>
-      <FormControl fullWidth margin='normal'>
-        <Divider>
-          <Chip label="OR" />
-        </Divider>
-      </FormControl>
-      <FormControl fullWidth margin='normal'>
-        <Button variant="outlined" disableElevation onClick={() => navigate("/sign-up")}>
-          Sign Up
-        </Button>
-      </FormControl>
-    </Box>
+        </Typography>
+        <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
+          Welcome back! Please enter your details.
+        </Typography>
+        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column' }}>
+          {alert ? <FormControl fullWidth margin='normal'>
+            <Alert severity="error">Error: {alert}</Alert>
+          </FormControl> : null}
+          <FormControl fullWidth margin='normal' error={!!fields.usernameError}>
+            <InputLabel htmlFor="outlined-adornment-username">Username</InputLabel>
+            <OutlinedInput
+              id="outlined-adornment-amount"
+              label="Amount"
+              value={fields.username}
+              onChange={(e) => setFields({ ...fields, username: e.target.value })}
+            />
+          </FormControl>
+          <FormControl fullWidth margin='normal' error={!!fields.passwordError}>
+            <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
+            <OutlinedInput
+              id="outlined-adornment-password"
+              type={showPassword ? 'text' : 'password'}
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    onMouseDown={handleMouseDownPassword}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              }
+              label="Password"
+              value={fields.password}
+              onChange={(e) => setFields({ ...fields, password: e.target.value })}
+            />
+          </FormControl>
+          <FormControl fullWidth margin='normal'>
+            <Button
+              type="submit"
+              variant="contained"
+              disableElevation
+              onClick={submitSignIn}
+              disabled={loading}
+              sx={{ py: 1.2, fontWeight: 'bold', borderRadius: 2 }}
+            >
+              Sign In
+            </Button>
+            {loading ? <CircularProgress
+              size={24}
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                marginTop: '-12px',
+                marginLeft: '-12px',
+              }}
+            /> : null}
+          </FormControl>
+          <FormControl fullWidth margin='normal'>
+            <Divider sx={{ my: 2 }}>
+              <Chip label="OR" size="small" />
+            </Divider>
+          </FormControl>
+          <FormControl fullWidth margin='normal'>
+            <Button variant="outlined" disableElevation onClick={() => navigate("/sign-up")}
+              sx={{ py: 1.2, borderRadius: 2 }}
+            >
+              Sign Up
+            </Button>
+          </FormControl>
+        </Box>
+      </CardContent>
+    </Card>
   )
 }

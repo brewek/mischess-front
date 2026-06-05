@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTheme } from '@mui/material/styles';
 import {
   Box,
   FormControl,
@@ -8,7 +9,10 @@ import {
   IconButton,
   Button,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Typography,
+  Card,
+  CardContent
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
@@ -16,6 +20,7 @@ import { useNavigate } from 'react-router';
 import { signUp } from '../../helpers/api';
 
 export default function SignUpForm(props) {
+  const theme = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [alert, setAlert] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -110,75 +115,87 @@ export default function SignUpForm(props) {
   }
 
   return (
-    <Box>
-      {alert ? <FormControl fullWidth margin='normal'>
-        <Alert severity="error">Error: {alert}</Alert>
-      </FormControl> : null}
-      <FormControl fullWidth margin='normal' error={!!fields.usernameError}>
-        <InputLabel htmlFor="outlined-adornment-username">Username</InputLabel>
-        <OutlinedInput
-          id="outlined-adornment-username"
-          label="Username"
-          value={fields.username}
-          onChange={onUsernameChange}
-        />
-      </FormControl>
-      <FormControl fullWidth margin='normal' error={!!fields.emailError}>
-        <InputLabel htmlFor="outlined-adornment-username">Email</InputLabel>
-        <OutlinedInput
-          id="outlined-adornment-email"
-          label="Email"
-          value={fields.email}
-          onChange={onEmailChange}
-        />
-      </FormControl>
-      <FormControl fullWidth margin='normal' error={!!fields.passwordError}>
-        <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
-        <OutlinedInput
-          id="outlined-adornment-password"
-          value={fields.password}
-          onChange={onPasswordChange}
-          type={showPassword ? 'text' : 'password'}
-          endAdornment={
-            <InputAdornment position="end">
-              <IconButton
-                aria-label="toggle password visibility"
-                onClick={handleClickShowPassword}
-                onMouseDown={handleMouseDownPassword}
-                edge="end"
-              >
-                {showPassword ? <VisibilityOff /> : <Visibility />}
-              </IconButton>
-            </InputAdornment>
-          }
-          label="Password"
-        />
-      </FormControl>
-      <FormControl fullWidth margin='normal' error={!!fields.passwordRepeatError}>
-        <InputLabel htmlFor="outlined-adornment-password">Repeat Password</InputLabel>
-        <OutlinedInput
-          id="outlined-adornment-password-repeat"
-          type={showPassword ? 'text' : 'password'}
-          value={fields.passwordRepeat}
-          onChange={onPasswordRepeatChange}
-          label="Repeat Password"
-        />
-      </FormControl>
-      <FormControl fullWidth margin='normal' disabled={loading}>
-        <Button variant="outlined" disableElevation onClick={submitForm}>
+    <Card elevation={4} sx={{ borderRadius: 3, mt: 4 }}>
+      <CardContent sx={{ pt: 4 }}>
+        <Typography variant="h5" align="center" gutterBottom fontWeight="bold" color="primary.main">
           Sign Up
-        </Button>
-        {loading ? <CircularProgress
-          size={24}
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            marginTop: '-12px',
-            marginLeft: '-12px',
-          }}
-        /> : null}
-      </FormControl>
-    </Box>
+        </Typography>
+        <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
+          Create your account to get started.
+        </Typography>
+        <Box>
+          {alert ? <FormControl fullWidth margin='normal'>
+            <Alert severity="error">Error: {alert}</Alert>
+          </FormControl> : null}
+          <FormControl fullWidth margin='normal' error={!!fields.usernameError}>
+            <InputLabel htmlFor="outlined-adornment-username">Username</InputLabel>
+            <OutlinedInput
+              id="outlined-adornment-username"
+              label="Username"
+              value={fields.username}
+              onChange={onUsernameChange}
+            />
+          </FormControl>
+          <FormControl fullWidth margin='normal' error={!!fields.emailError}>
+            <InputLabel htmlFor="outlined-adornment-email">Email</InputLabel>
+            <OutlinedInput
+              id="outlined-adornment-email"
+              label="Email"
+              value={fields.email}
+              onChange={onEmailChange}
+            />
+          </FormControl>
+          <FormControl fullWidth margin='normal' error={!!fields.passwordError}>
+            <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
+            <OutlinedInput
+              id="outlined-adornment-password"
+              value={fields.password}
+              onChange={onPasswordChange}
+              type={showPassword ? 'text' : 'password'}
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    onMouseDown={handleMouseDownPassword}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              }
+              label="Password"
+            />
+          </FormControl>
+          <FormControl fullWidth margin='normal' error={!!fields.passwordRepeatError}>
+            <InputLabel htmlFor="outlined-adornment-password">Repeat Password</InputLabel>
+            <OutlinedInput
+              id="outlined-adornment-password-repeat"
+              type={showPassword ? 'text' : 'password'}
+              value={fields.passwordRepeat}
+              onChange={onPasswordRepeatChange}
+              label="Repeat Password"
+            />
+          </FormControl>
+          <FormControl fullWidth margin='normal' disabled={loading}>
+            <Button variant="contained" disableElevation onClick={submitForm}
+              sx={{ py: 1.2, fontWeight: 'bold', borderRadius: 2 }}
+            >
+              Sign Up
+            </Button>
+            {loading ? <CircularProgress
+              size={24}
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                marginTop: '-12px',
+                marginLeft: '-12px',
+              }}
+            /> : null}
+          </FormControl>
+        </Box>
+      </CardContent>
+    </Card>
   )
 }

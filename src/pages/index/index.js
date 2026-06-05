@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from '@mui/material/styles';
 import {
   Grid,
   Container,
@@ -14,7 +15,9 @@ import {
   ListItemButton,
   ListItemText,
   Divider,
-  Chip
+  Chip,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import { getOpening, getUser, getGames } from "../../helpers/api";
 
@@ -23,9 +26,12 @@ import PGNViewer from "../../components/PGNViewer";
 
 
 export default function IndexPage(props) {
+  const theme = useTheme();
   const [cookies] = useCookies();
   const [game, setGame] = useState({});
   const [games, setGames] = useState([]);
+  const [filteredGames, setFilteredGames] = useState([]);
+  const [gameFilter, setGameFilter] = useState('all');
   const [selectedGameIndex, setSelectedGameIndex] = useState(-1);
   const [players, setPlayers] = useState({
     white: '',
@@ -106,7 +112,22 @@ export default function IndexPage(props) {
     if (response.ok) {
       let data = await response.json();
       setGames(data);
+      setFilteredGames(data);
     }
+  }
+
+  const handleFilterChange = (event, newFilter) => {
+    if (newFilter === null) return;
+    setGameFilter(newFilter);
+
+    let filtered = games;
+    if (newFilter === 'white') {
+      filtered = games.filter(g => g.players.white.username === props.user?.username);
+    } else if (newFilter === 'black') {
+      filtered = games.filter(g => g.players.black.username === props.user?.username);
+    }
+    setFilteredGames(filtered);
+    setSelectedGameIndex(-1);
   }
 
   useEffect(() => {
@@ -153,24 +174,38 @@ export default function IndexPage(props) {
         {games.length > 0 && (
           <Grid item xs={12} md={3}>
             <Paper elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-              <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
+              <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
                 <Typography variant="h6" fontWeight="bold">
                   Moje partie
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.85 }}>
-                  {games.length} partii
+                  {filteredGames.length} z {games.length} partii
                 </Typography>
               </Box>
+              <Box sx={{ p: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                <ToggleButtonGroup
+                  value={gameFilter}
+                  exclusive
+                  onChange={handleFilterChange}
+                  fullWidth
+                  size="small"
+                >
+                  <ToggleButton value="all">Wszystkie</ToggleButton>
+                  <ToggleButton value="white">⬜ Biały</ToggleButton>
+                  <ToggleButton value="black">⬛ Czarny</ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
               <List sx={{ maxHeight: { xs: '300px', md: height > 0 ? height : 600 }, overflow: 'auto' }}>
-                {games.map((g, idx) => {
-                  const isSelected = selectedGameIndex === -1 ? idx === games.length - 1 : idx === selectedGameIndex;
+                {filteredGames.map((g, idx) => {
+                  const isSelected = selectedGameIndex === -1 ? idx === filteredGames.length - 1 : idx === selectedGameIndex;
                   return (
                     <Box key={idx}>
                       <ListItemButton
                         selected={isSelected}
                         onClick={() => {
+                          const originalIndex = games.indexOf(g);
                           setSelectedGameIndex(idx);
-                          fetchOpening(cookies.token, props.user?.username, idx);
+                          fetchOpening(cookies.token, props.user?.username, originalIndex);
                         }}
                         sx={{
                           pl: 3,
@@ -181,12 +216,12 @@ export default function IndexPage(props) {
                           mb: 0.5,
                           '&.Mui-selected': {
                             bgcolor: 'primary.light',
-                            color: 'white',
+                            color: 'primary.contrastText',
                             '&:hover': {
                               bgcolor: 'primary.dark',
                             },
                             '& .MuiListItemText-primary': {
-                              color: 'white',
+                              color: 'primary.contrastText',
                               fontWeight: 600,
                             },
                             '& .MuiListItemText-secondary': {
@@ -231,12 +266,12 @@ export default function IndexPage(props) {
           <Card elevation={4} sx={{ borderRadius: 3, overflow: 'hidden' }}>
             <CardContent sx={{ p: 0 }}>
               <Grid container>
-                <Grid item xs={12} md={8} ref={boardRef} sx={{ p: 2, bgcolor: '#f5f5f5' }}>
+                <Grid item xs={12} md={8} ref={boardRef} sx={{ p: 2, bgcolor: theme.palette.mode === 'dark' ? '#1a1a2e' : '#f5f5f5' }}>
                   <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto' }}>
                     <Board config={gameConfig} arrows={arrows} />
                   </Box>
                 </Grid>
-                <Grid item xs={12} md={4} sx={{ borderLeft: { md: '1px solid #e0e0e0' } }}>
+                <Grid item xs={12} md={4} sx={{ borderLeft: { md: `1px solid ${theme.palette.divider}` } }}>
                   <Box sx={{ height: { xs: '300px', md: height > 0 ? height : 600 }, overflow: 'hidden' }}>
                     <PGNViewer
                       gameConfig={gameConfig}
@@ -248,7 +283,7 @@ export default function IndexPage(props) {
                       resetArrows={resetArrows}
                     />
                   </Box>
-                  <Box sx={{ p: 2, bgcolor: 'background.paper', borderTop: '1px solid #e0e0e0' }}>
+                  <Box sx={{ p: 2, bgcolor: 'background.paper', borderTop: `1px solid ${theme.palette.divider}` }}>
                     <Button
                       variant="contained"
                       color="primary"
