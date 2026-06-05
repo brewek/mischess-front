@@ -13,7 +13,12 @@ import {
   CardContent,
   Typography,
   Box,
-  Paper
+  Paper,
+  List,
+  ListItemButton,
+  ListItemText,
+  Divider,
+  Chip
 } from "@mui/material";
 import { getOpening, getUser, getGames } from "../../helpers/api";
 
@@ -140,73 +145,130 @@ export default function IndexPage(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cookies.token]);
 
-  const handleGameChange = (event) => {
-    const idx = event.target.value;
-    setSelectedGameIndex(idx);
-    fetchOpening(cookies.token, props.user?.username, idx);
-  };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" gutterBottom fontWeight="bold" color="primary.main">
         Analiza partii
       </Typography>
-      
-      {games.length > 0 && (
-        <Paper elevation={3} sx={{ p: 2, mb: 4, borderRadius: 2 }}>
-          <FormControl fullWidth variant="outlined">
-            <InputLabel id="game-select-label">Wybierz partię</InputLabel>
-            <Select
-              labelId="game-select-label"
-              value={selectedGameIndex === -1 ? games.length - 1 : selectedGameIndex}
-              onChange={handleGameChange}
-              label="Wybierz partię"
-            >
-              {games.map((g, idx) => (
-                <MenuItem key={idx} value={idx}>
-                  {new Date(g.game_ended).toLocaleString()} - {g.players.white.username} ({g.players.white.rating}) vs {g.players.black.username} ({g.players.black.rating})
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Paper>
-      )}
 
-      <Card elevation={4} sx={{ borderRadius: 3, overflow: 'hidden' }}>
-        <CardContent sx={{ p: 0 }}>
-          <Grid container>
-            <Grid item xs={12} md={8} ref={boardRef} sx={{ p: 2, bgcolor: '#f5f5f5' }}>
-              <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto' }}>
-                <Board config={gameConfig} arrows={arrows} />
+      <Grid container spacing={3}>
+        {/* Sidebar - Game List */}
+        {games.length > 0 && (
+          <Grid item xs={12} md={3}>
+            <Paper elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+              <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
+                <Typography variant="h6" fontWeight="bold">
+                  Moje partie
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.85 }}>
+                  {games.length} partii
+                </Typography>
               </Box>
-            </Grid>
-            <Grid item xs={12} md={4} sx={{ borderLeft: { md: '1px solid #e0e0e0' } }}>
-              <Box sx={{ height: { xs: '300px', md: height > 0 ? height : 600 }, overflow: 'hidden' }}>
-                <PGNViewer
-                  gameConfig={gameConfig}
-                  setGameConfig={setGameConfig}
-                  pgn={pgn}
-                  players={players}
-                  height={height ? height : 0}
-                  clearArrows={clearArrows}
-                  resetArrows={resetArrows}
-                />
-              </Box>
-              <Box sx={{ p: 2, bgcolor: 'background.paper', borderTop: '1px solid #e0e0e0' }}>
-                <Button 
-                  variant="contained" 
-                  color="primary" 
-                  fullWidth 
-                  onClick={resetArrows}
-                  sx={{ borderRadius: 2, fontWeight: 'bold' }}
-                >
-                  Resetuj analizę
-                </Button>
-              </Box>
-            </Grid>
+              <List sx={{ maxHeight: { xs: '300px', md: height > 0 ? height : 600 }, overflow: 'auto' }}>
+                {games.map((g, idx) => {
+                  const isSelected = selectedGameIndex === -1 ? idx === games.length - 1 : idx === selectedGameIndex;
+                  return (
+                    <Box key={idx}>
+                      <ListItemButton
+                        selected={isSelected}
+                        onClick={() => {
+                          setSelectedGameIndex(idx);
+                          fetchOpening(cookies.token, props.user?.username, idx);
+                        }}
+                        sx={{
+                          pl: 3,
+                          pr: 2,
+                          py: 1.5,
+                          borderRadius: 1,
+                          mx: 1,
+                          mb: 0.5,
+                          '&.Mui-selected': {
+                            bgcolor: 'primary.light',
+                            color: 'white',
+                            '&:hover': {
+                              bgcolor: 'primary.dark',
+                            },
+                            '& .MuiListItemText-primary': {
+                              color: 'white',
+                              fontWeight: 600,
+                            },
+                            '& .MuiListItemText-secondary': {
+                              color: 'rgba(255,255,255,0.85)',
+                            },
+                          },
+                        }}
+                      >
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography variant="body2" fontWeight="medium" noWrap>
+                                {g.players.white.username}
+                              </Typography>
+                              <Chip label={`R${g.players.white.rating}`} size="small" sx={{ height: 20, fontSize: '0.65rem' }} />
+                            </Box>
+                          }
+                          secondary={
+                            <>
+                              <Typography component="span" variant="body2" noWrap>
+                                vs {g.players.black.username}{' '}
+                                <Chip label={`R${g.players.black.rating}`} size="small" sx={{ height: 20, fontSize: '0.65rem', ml: 0.5 }} />
+                              </Typography>
+                              <Typography component="span" variant="caption" color="text.secondary">
+                                {'\n'}{new Date(g.game_ended).toLocaleString()}
+                              </Typography>
+                            </>
+                          }
+                        />
+                      </ListItemButton>
+                      {idx < games.length - 1 && <Divider sx={{ mx: 2 }} />}
+                    </Box>
+                  );
+                })}
+              </List>
+            </Paper>
           </Grid>
-        </CardContent>
-      </Card>
+        )}
+
+        {/* Main Content - Board + PGN */}
+        <Grid item xs={12} md={games.length > 0 ? 9 : 12}>
+          <Card elevation={4} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+            <CardContent sx={{ p: 0 }}>
+              <Grid container>
+                <Grid item xs={12} md={8} ref={boardRef} sx={{ p: 2, bgcolor: '#f5f5f5' }}>
+                  <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto' }}>
+                    <Board config={gameConfig} arrows={arrows} />
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={4} sx={{ borderLeft: { md: '1px solid #e0e0e0' } }}>
+                  <Box sx={{ height: { xs: '300px', md: height > 0 ? height : 600 }, overflow: 'hidden' }}>
+                    <PGNViewer
+                      gameConfig={gameConfig}
+                      setGameConfig={setGameConfig}
+                      pgn={pgn}
+                      players={players}
+                      height={height ? height : 0}
+                      clearArrows={clearArrows}
+                      resetArrows={resetArrows}
+                    />
+                  </Box>
+                  <Box sx={{ p: 2, bgcolor: 'background.paper', borderTop: '1px solid #e0e0e0' }}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      onClick={resetArrows}
+                      sx={{ borderRadius: 2, fontWeight: 'bold' }}
+                    >
+                      Resetuj analizę
+                    </Button>
+                  </Box>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </Container>
   );
 }
