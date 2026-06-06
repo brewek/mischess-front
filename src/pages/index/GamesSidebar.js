@@ -50,7 +50,16 @@ export default function GamesSidebar(props) {
   } = props;
 
   return (
-    <Paper elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+    <Paper
+      elevation={3}
+      sx={{
+        borderRadius: 2,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        height: { xs: 'auto', md: height > 0 ? height : 600 },
+      }}
+    >
       <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
         <Typography variant="h6" fontWeight="bold">
           My games
@@ -72,7 +81,7 @@ export default function GamesSidebar(props) {
           <ToggleButton value="black">Black</ToggleButton>
         </ToggleButtonGroup>
       </Box>
-      <List sx={{ maxHeight: { xs: '300px', md: height > 0 ? height : 600 }, overflow: 'auto' }}>
+      <List sx={{ flexGrow: 1, overflow: 'auto' }}>
         {filteredGames.map((g, idx) => {
           const isSelected = selectedGameIndex === -1 ? idx === 0 : idx === selectedGameIndex;
           const isWhite = myUsernames.has(g.players.white.username?.toLowerCase());

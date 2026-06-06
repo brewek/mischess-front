@@ -24,6 +24,8 @@ import { createFallbackGame } from '../../helpers';
 import Board from '../../components/ChessBoard';
 import PGNViewer from '../../components/PGNViewer';
 import GamesSidebar from './GamesSidebar';
+import useChessEngine from '../../hooks/useChessEngine';
+import EngineControls from '../../components/ChessBoard/EngineControls';
 
 function normalizeGamesResponse(data) {
   if (Array.isArray(data)) return data;
@@ -104,6 +106,8 @@ export default function IndexPage({ user, setUser }) {
   const gamesRef = useRef(games);
   gamesRef.current = games;
 
+  const engineHook = useChessEngine();
+
   const myUsernames = useMemo(
     () =>
       new Set(
@@ -142,14 +146,41 @@ export default function IndexPage({ user, setUser }) {
 
   const clearArrows = useCallback(() => setArrows([]), []);
 
+  const {
+    isEnabled: engineEnabled,
+    evaluation: engineEval,
+    evaluatePosition: evaluateEnginePos,
+  } = engineHook;
+
   useEffect(() => {
     const errorFen = game?.game?.fen || game?.fen || 'start';
+    let baseArrows = [];
     if (gameConfig.position === errorFen) {
-      setArrows(getArrows(game));
-    } else {
-      setArrows([]);
+      baseArrows = getArrows(game);
     }
-  }, [gameConfig.position, game, getArrows]);
+
+    if (engineEnabled && Array.isArray(engineEval)) {
+      engineEval.forEach((line, idx) => {
+        if (
+          line &&
+          line.firstMove &&
+          typeof line.firstMove === 'string' &&
+          line.firstMove.length >= 4
+        ) {
+          const colors = ['blue', 'cornflowerblue', 'lightblue'];
+          baseArrows.push(createArrow(line.firstMove, colors[idx] || 'lightblue'));
+        }
+      });
+    }
+
+    setArrows([...baseArrows]);
+  }, [gameConfig.position, game, getArrows, engineEnabled, engineEval, createArrow]);
+
+  useEffect(() => {
+    if (engineEnabled) {
+      evaluateEnginePos(gameConfig.position);
+    }
+  }, [gameConfig.position, engineEnabled, evaluateEnginePos]);
 
   const playSound = useCallback(() => {
     const audio = new Audio('/move.mp3');
@@ -479,12 +510,21 @@ export default function IndexPage({ user, setUser }) {
                   item
                   xs={12}
                   md={4}
-                  sx={{ borderLeft: { md: `1px solid ${theme.palette.divider}` } }}
+                  sx={{
+                    borderLeft: { md: `1px solid ${theme.palette.divider}` },
+                    display: 'flex',
+                    flexDirection: 'column',
+                    maxHeight: { md: height > 0 ? height : 'none' },
+                  }}
                 >
+                  <EngineControls engineHook={engineHook} />
                   <Box
                     sx={{
-                      height: { xs: '300px', md: height > 0 ? height : 600 },
+                      flexGrow: 1,
                       overflow: 'hidden',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      minHeight: { xs: '300px', md: 0 },
                     }}
                   >
                     <PGNViewer
@@ -492,7 +532,7 @@ export default function IndexPage({ user, setUser }) {
                       setGameConfig={setGameConfig}
                       pgn={pgn}
                       players={players}
-                      height={height ? height : 0}
+                      height="100%"
                       clearArrows={clearArrows}
                       resetArrows={resetArrows}
                       onHistoryChange={setHistory}
