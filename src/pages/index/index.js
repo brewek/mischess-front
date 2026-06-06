@@ -2,6 +2,11 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useCookies } from 'react-cookie';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
+import FirstPageIcon from '@mui/icons-material/FirstPage';
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import LastPageIcon from '@mui/icons-material/LastPage';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import {
   Grid,
   Container,
@@ -11,6 +16,8 @@ import {
   Typography,
   Box,
   CircularProgress,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import { getOpening, getUser, getGames } from '../../helpers/api';
 import { createFallbackGame } from '../../helpers';
@@ -89,6 +96,7 @@ export default function IndexPage({ user, setUser }) {
     position: 'start',
   });
   const [pgn, setPgn] = useState('');
+  const [history, setHistory] = useState([]);
   const [arrows, setArrows] = useState([]);
   const [height, setHeight] = useState(0);
   const [currentUsername, setCurrentUsername] = useState(null);
@@ -120,10 +128,13 @@ export default function IndexPage({ user, setUser }) {
 
   const getArrows = useCallback(
     (lastGame) => {
-      if (!lastGame || !Array.isArray(lastGame.expected_moves)) return [];
-      let result = lastGame.expected_moves.map((item) => createArrow(item, 'green'));
-      if (typeof lastGame.move_played === 'string') {
-        result = result.concat(createArrow(lastGame.move_played, 'red'));
+      if (!lastGame) return [];
+      const expectedMoves = lastGame.expected_moves || lastGame.game?.expected_moves;
+      if (!Array.isArray(expectedMoves)) return [];
+      let result = expectedMoves.map((item) => createArrow(item, 'green'));
+      const movePlayed = lastGame.move_played || lastGame.game?.move_played;
+      if (typeof movePlayed === 'string') {
+        result = result.concat(createArrow(movePlayed, 'red'));
       }
       return result;
     },
@@ -132,11 +143,47 @@ export default function IndexPage({ user, setUser }) {
 
   const clearArrows = useCallback(() => setArrows([]), []);
 
+  useEffect(() => {
+    const errorFen = game?.game?.fen || game?.fen || 'start';
+    if (gameConfig.position === errorFen) {
+      setArrows(getArrows(game));
+    } else {
+      setArrows([]);
+    }
+  }, [gameConfig.position, game, getArrows]);
+
+  const goToStart = useCallback(() => {
+    setGameConfig((prev) => ({ ...prev, position: game?.game?.fen || 'start' }));
+  }, [game]);
+
+  const goPrevious = useCallback(() => {
+    if (history.length === 0) return;
+    const currentIdx = history.findIndex((h) => h.fen === gameConfig.position);
+    if (currentIdx === -1) return; // already at start
+    if (currentIdx === 0) {
+      goToStart();
+    } else {
+      setGameConfig((prev) => ({ ...prev, position: history[currentIdx - 1].fen }));
+    }
+  }, [history, gameConfig.position, goToStart]);
+
+  const goNext = useCallback(() => {
+    if (history.length === 0) return;
+    const currentIdx = history.findIndex((h) => h.fen === gameConfig.position);
+    if (currentIdx === history.length - 1) return; // already at end
+    const nextIdx = currentIdx === -1 ? 0 : currentIdx + 1;
+    setGameConfig((prev) => ({ ...prev, position: history[nextIdx].fen }));
+  }, [history, gameConfig.position]);
+
+  const goToEnd = useCallback(() => {
+    if (history.length === 0) return;
+    setGameConfig((prev) => ({ ...prev, position: history[history.length - 1].fen }));
+  }, [history]);
+
   const resetArrows = useCallback(() => {
     const fenPosition = game?.game?.fen || 'start';
     setGameConfig((prev) => ({ ...prev, position: fenPosition }));
-    setArrows(getArrows(game));
-  }, [game, getArrows]);
+  }, [game]);
 
   const fetchOpening = useCallback(
     async (token, username, index = -1, currentUserObj = null) => {
@@ -439,24 +486,44 @@ export default function IndexPage({ user, setUser }) {
                       height={height ? height : 0}
                       clearArrows={clearArrows}
                       resetArrows={resetArrows}
+                      onHistoryChange={setHistory}
                     />
                   </Box>
                   <Box
                     sx={{
-                      p: 2,
+                      p: 1,
                       bgcolor: 'background.paper',
                       borderTop: `1px solid ${theme.palette.divider}`,
+                      display: 'flex',
+                      justifyContent: 'center',
+                      gap: 1,
                     }}
                   >
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      fullWidth
-                      onClick={resetArrows}
-                      sx={{ borderRadius: 2, fontWeight: 'bold' }}
-                    >
-                      Reset analysis
-                    </Button>
+                    <Tooltip title="Go to beginning">
+                      <IconButton onClick={goToStart} color="primary">
+                        <FirstPageIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Previous move">
+                      <IconButton onClick={goPrevious} color="primary">
+                        <NavigateBeforeIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Reset analysis">
+                      <IconButton onClick={resetArrows} color="primary">
+                        <RestartAltIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Next move">
+                      <IconButton onClick={goNext} color="primary">
+                        <NavigateNextIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Go to end">
+                      <IconButton onClick={goToEnd} color="primary">
+                        <LastPageIcon />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
                 </Grid>
               </Grid>

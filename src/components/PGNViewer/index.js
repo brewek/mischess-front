@@ -10,12 +10,12 @@ export default function PGNViewer(props) {
       ...props.gameConfig,
       position: history[idx].fen,
     });
-    props.clearArrows();
   };
 
   useEffect(() => {
     if (!props.pgn) {
       setHistory([]);
+      if (props.onHistoryChange) props.onHistoryChange([]);
       return;
     }
 
@@ -33,7 +33,8 @@ export default function PGNViewer(props) {
     });
 
     setHistory(moves);
-  }, [props.pgn]);
+    if (props.onHistoryChange) props.onHistoryChange(moves);
+  }, [props.pgn, props.onHistoryChange]);
 
   return (
     <Grid
