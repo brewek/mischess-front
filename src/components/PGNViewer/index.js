@@ -1,15 +1,15 @@
 import { Grid, List, ListItem, ListItemButton, ListItemText, Typography } from '@mui/material';
 import { Chess } from 'chess.js';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, memo } from 'react';
 
-export default function PGNViewer(props) {
+function PGNViewer(props) {
   const [history, setHistory] = useState([]);
 
   const changeFen = (idx) => {
-    props.setGameConfig({
-      ...props.gameConfig,
+    props.setGameConfig((prev) => ({
+      ...prev,
       position: history[idx].fen,
-    });
+    }));
     if (props.playSound) {
       props.playSound();
     }
@@ -39,6 +39,32 @@ export default function PGNViewer(props) {
     if (props.onHistoryChange) props.onHistoryChange(moves);
   }, [props.pgn, props.onHistoryChange]);
 
+  const whiteMoves = useMemo(() => {
+    if (!history) return null;
+    return history
+      .filter((item, idx) => idx % 2 === 0)
+      .map((item) => (
+        <ListItem key={item.index}>
+          <ListItemButton onClick={() => changeFen(item.index)}>
+            <ListItemText>{item.move}</ListItemText>
+          </ListItemButton>
+        </ListItem>
+      ));
+  }, [history]); // changeFen depends on props.setGameConfig/playSound which are stable
+
+  const blackMoves = useMemo(() => {
+    if (!history) return null;
+    return history
+      .filter((item, idx) => idx % 2 !== 0)
+      .map((item) => (
+        <ListItem key={item.index}>
+          <ListItemButton onClick={() => changeFen(item.index)}>
+            <ListItemText>{item.move}</ListItemText>
+          </ListItemButton>
+        </ListItem>
+      ));
+  }, [history]);
+
   return (
     <Grid
       container
@@ -61,23 +87,7 @@ export default function PGNViewer(props) {
             {props.players ? props.players.white.username : null}
           </Typography>
         </div>
-        <List dense>
-          {history
-            ? history
-                .filter((item, idx) => {
-                  return idx % 2 === 0;
-                })
-                .map((item, idx) => {
-                  return (
-                    <ListItem key={item.index}>
-                      <ListItemButton onClick={() => changeFen(item.index)}>
-                        <ListItemText>{item.move}</ListItemText>
-                      </ListItemButton>
-                    </ListItem>
-                  );
-                })
-            : null}
-        </List>
+        <List dense>{whiteMoves}</List>
       </Grid>
       <Grid item xs={6}>
         <div
@@ -90,24 +100,10 @@ export default function PGNViewer(props) {
             {props.players ? props.players.black.username : null}
           </Typography>
         </div>
-        <List dense>
-          {history
-            ? history
-                .filter((item, idx) => {
-                  return idx % 2 !== 0;
-                })
-                .map((item, idx) => {
-                  return (
-                    <ListItem key={item.index}>
-                      <ListItemButton onClick={() => changeFen(item.index)}>
-                        <ListItemText>{item.move}</ListItemText>
-                      </ListItemButton>
-                    </ListItem>
-                  );
-                })
-            : null}
-        </List>
+        <List dense>{blackMoves}</List>
       </Grid>
     </Grid>
   );
 }
+
+export default memo(PGNViewer);

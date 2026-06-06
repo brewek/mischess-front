@@ -9,11 +9,24 @@ export default function Board(props) {
     const el = boardRef.current;
     if (!el) return;
 
-    el.setAttribute('fen', props.config?.position || 'start');
-    el.setAttribute('orientation', props.config?.orientation || 'white');
     el.setAttribute('coordinates', 'classic');
     el.setAttribute('moveable', 'false');
-  }, [props.config]);
+  }, []);
+
+  useEffect(() => {
+    const el = boardRef.current;
+    if (!el) return;
+
+    const newFen = props.config?.position || 'start';
+    if (el.getAttribute('fen') !== newFen) {
+      el.setAttribute('fen', newFen);
+    }
+
+    const newOrientation = props.config?.orientation || 'white';
+    if (el.getAttribute('orientation') !== newOrientation) {
+      el.setAttribute('orientation', newOrientation);
+    }
+  }, [props.config?.position, props.config?.orientation]);
 
   useEffect(() => {
     const el = boardRef.current;
