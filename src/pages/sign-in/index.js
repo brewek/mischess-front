@@ -1,6 +1,4 @@
-import {
-  Container
-} from '@mui/material';
+import { Container } from '@mui/material';
 
 import SignInForm from '../../components/SignInForm';
 
@@ -9,7 +7,7 @@ export default function SignInPage(props) {
 
   return (
     <Container maxWidth="sm">
-      <SignInForm apiUrl={apiUrl}/>
+      <SignInForm apiUrl={apiUrl} />
     </Container>
   );
 }

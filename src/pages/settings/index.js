@@ -16,11 +16,10 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction,
   Switch,
   FormControlLabel,
   Divider,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useCookies } from 'react-cookie';
@@ -28,7 +27,7 @@ import { getUser, updateUser, changePassword } from '../../helpers/api';
 
 const ACCOUNT_TYPES = {
   1: 'Lichess',
-  2: 'Chess.com'
+  2: 'Chess.com',
 };
 
 export default function SettingsPage() {
@@ -104,7 +103,7 @@ export default function SettingsPage() {
       const res = await changePassword(cookies.token, {
         old_password: oldPassword,
         new_password: newPassword,
-        verify_password: verifyPassword
+        verify_password: verifyPassword,
       });
       if (res.ok) {
         setPasswordSuccess(true);
@@ -133,7 +132,7 @@ export default function SettingsPage() {
 
     const newAccount = {
       account_type: newAccountType,
-      value: newAccountValue.trim()
+      value: newAccountValue.trim(),
     };
 
     const updatedAccounts = [...accounts, newAccount];
@@ -204,7 +203,11 @@ export default function SettingsPage() {
           <Typography variant="h6" gutterBottom>
             Change Password
           </Typography>
-          <Box component="form" onSubmit={handleChangePassword} sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 400 }}>
+          <Box
+            component="form"
+            onSubmit={handleChangePassword}
+            sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 400 }}
+          >
             <TextField
               label="Current Password"
               type="password"
@@ -235,7 +238,12 @@ export default function SettingsPage() {
             />
             {passwordError && <Alert severity="error">{passwordError}</Alert>}
             {passwordSuccess && <Alert severity="success">Password changed successfully.</Alert>}
-            <Button type="submit" variant="contained" disabled={changingPassword} sx={{ alignSelf: 'flex-start' }}>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={changingPassword}
+              sx={{ alignSelf: 'flex-start' }}
+            >
               {changingPassword ? <CircularProgress size={24} /> : 'Change Password'}
             </Button>
           </Box>
@@ -255,16 +263,23 @@ export default function SettingsPage() {
           ) : (
             <List dense>
               {accounts.map((account, index) => (
-                <ListItem key={index} divider>
+                <ListItem
+                  key={index}
+                  divider
+                  secondaryAction={
+                    <IconButton
+                      edge="end"
+                      onClick={() => handleRemoveAccount(index)}
+                      disabled={savingAccounts}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  }
+                >
                   <ListItemText
                     primary={account.value}
                     secondary={ACCOUNT_TYPES[account.account_type] || 'Unknown'}
                   />
-                  <ListItemSecondaryAction>
-                    <IconButton edge="end" onClick={() => handleRemoveAccount(index)} disabled={savingAccounts}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </ListItemSecondaryAction>
                 </ListItem>
               ))}
             </List>
@@ -276,7 +291,11 @@ export default function SettingsPage() {
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
             <FormControl size="small" sx={{ minWidth: 140 }}>
               <InputLabel>Platform</InputLabel>
-              <Select value={newAccountType} label="Platform" onChange={(e) => setNewAccountType(e.target.value)}>
+              <Select
+                value={newAccountType}
+                label="Platform"
+                onChange={(e) => setNewAccountType(e.target.value)}
+              >
                 <MenuItem value={1}>Lichess</MenuItem>
                 <MenuItem value={2}>Chess.com</MenuItem>
               </Select>
@@ -292,8 +311,16 @@ export default function SettingsPage() {
               Add
             </Button>
           </Box>
-          {accountError && <Alert severity="error" sx={{ mt: 1 }}>{accountError}</Alert>}
-          {accountSuccess && <Alert severity="success" sx={{ mt: 1 }}>Account added successfully.</Alert>}
+          {accountError && (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              {accountError}
+            </Alert>
+          )}
+          {accountSuccess && (
+            <Alert severity="success" sx={{ mt: 1 }}>
+              Account added successfully.
+            </Alert>
+          )}
         </CardContent>
       </Card>
 

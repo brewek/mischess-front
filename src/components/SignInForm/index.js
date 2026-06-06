@@ -13,14 +13,13 @@ import {
   CircularProgress,
   Typography,
   Card,
-  CardContent
+  CardContent,
 } from '@mui/material';
 import { useNavigate } from 'react-router';
-import { useCookies } from "react-cookie";
+import { useCookies } from 'react-cookie';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { signIn } from '../../helpers/api';
-
 
 export default function SignInForm(props) {
   const [alert, setAlert] = useState('');
@@ -31,10 +30,9 @@ export default function SignInForm(props) {
     password: '',
     passwordError: '',
   });
-  // eslint-disable-next-line
-  const [cookies, setCookies] = useCookies();
+  const [, setCookies] = useCookies();
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -47,23 +45,23 @@ export default function SignInForm(props) {
       setFields({
         ...fields,
         usernameError: 'Required field',
-        passwordError: 'Required field'
+        passwordError: 'Required field',
       });
-      setAlert('Please enter a value for the required fields.')
-      return
+      setAlert('Please enter a value for the required fields.');
+      return;
     }
 
     setLoading(true);
 
     let response = await signIn({
       username: fields.username,
-      password: fields.password
+      password: fields.password,
     });
 
     setFields({
       ...fields,
       usernameError: '',
-      passwordError: ''
+      passwordError: '',
     });
 
     setLoading(false);
@@ -72,7 +70,7 @@ export default function SignInForm(props) {
       let error = await response.json();
       console.error(error.detail);
       setAlert(error.detail);
-      return
+      return;
     }
 
     let body = await response.json();
@@ -81,10 +79,10 @@ export default function SignInForm(props) {
     setCookies('token', `${type} ${body.access_token}`, {
       path: '/',
       maxAge: 7776000,
-      sameSite: 'strict'
+      sameSite: 'strict',
     });
     navigate('/');
-  }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -100,23 +98,29 @@ export default function SignInForm(props) {
         <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
           Welcome back! Please enter your details.
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column' }}>
-          {alert ? <FormControl fullWidth margin='normal'>
-            <Alert severity="error">Error: {alert}</Alert>
-          </FormControl> : null}
-          <FormControl fullWidth margin='normal' error={!!fields.usernameError}>
-            <InputLabel htmlFor="outlined-adornment-username">Username</InputLabel>
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{ display: 'flex', flexDirection: 'column' }}
+        >
+          {alert ? (
+            <FormControl fullWidth margin="normal">
+              <Alert severity="error">Error: {alert}</Alert>
+            </FormControl>
+          ) : null}
+          <FormControl fullWidth margin="normal" error={!!fields.usernameError}>
+            <InputLabel htmlFor="username">Username</InputLabel>
             <OutlinedInput
-              id="outlined-adornment-amount"
-              label="Amount"
+              id="username"
+              label="Username"
               value={fields.username}
               onChange={(e) => setFields({ ...fields, username: e.target.value })}
             />
           </FormControl>
-          <FormControl fullWidth margin='normal' error={!!fields.passwordError}>
-            <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
+          <FormControl fullWidth margin="normal" error={!!fields.passwordError}>
+            <InputLabel htmlFor="password">Password</InputLabel>
             <OutlinedInput
-              id="outlined-adornment-password"
+              id="password"
               type={showPassword ? 'text' : 'password'}
               endAdornment={
                 <InputAdornment position="end">
@@ -135,35 +139,39 @@ export default function SignInForm(props) {
               onChange={(e) => setFields({ ...fields, password: e.target.value })}
             />
           </FormControl>
-          <FormControl fullWidth margin='normal'>
+          <FormControl fullWidth margin="normal">
             <Button
               type="submit"
               variant="contained"
               disableElevation
-              onClick={submitSignIn}
               disabled={loading}
               sx={{ py: 1.2, fontWeight: 'bold', borderRadius: 2 }}
             >
               Sign In
             </Button>
-            {loading ? <CircularProgress
-              size={24}
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                marginTop: '-12px',
-                marginLeft: '-12px',
-              }}
-            /> : null}
+            {loading ? (
+              <CircularProgress
+                size={24}
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  marginTop: '-12px',
+                  marginLeft: '-12px',
+                }}
+              />
+            ) : null}
           </FormControl>
-          <FormControl fullWidth margin='normal'>
+          <FormControl fullWidth margin="normal">
             <Divider sx={{ my: 2 }}>
               <Chip label="OR" size="small" />
             </Divider>
           </FormControl>
-          <FormControl fullWidth margin='normal'>
-            <Button variant="outlined" disableElevation onClick={() => navigate("/sign-up")}
+          <FormControl fullWidth margin="normal">
+            <Button
+              variant="outlined"
+              disableElevation
+              onClick={() => navigate('/sign-up')}
               sx={{ py: 1.2, borderRadius: 2 }}
             >
               Sign Up
@@ -172,5 +180,5 @@ export default function SignInForm(props) {
         </Box>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,12 +1,8 @@
-import * as React from "react";
+import * as React from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
-import TopNav from './components/TopNav'
-import {
-  BrowserRouter,
-  Routes,
-  Route
-} from "react-router-dom";
+import TopNav from './components/TopNav';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import IndexPage from './pages/index';
 import SignInPage from './pages/sign-in';
 import SignUpPage from './pages/sign-up';
@@ -56,8 +52,13 @@ function App() {
     <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
       <CssBaseline />
       <BrowserRouter basename="/">
-        <TopNav user={user} setUser={setUser} darkMode={darkMode} handleToggleTheme={handleToggleTheme} />
-        <Routes >
+        <TopNav
+          user={user}
+          setUser={setUser}
+          darkMode={darkMode}
+          handleToggleTheme={handleToggleTheme}
+        />
+        <Routes>
           <Route path="/" element={<IndexPage user={user} setUser={setUser} />} />
           <Route path="/sign-up" element={<SignUpPage />} />
           <Route path="/sign-in" element={<SignInPage />} />

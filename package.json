@@ -12,6 +12,7 @@
     "@testing-library/react": "^13.4.0",
     "chess.js": "^1.0.0-beta.6",
     "eslint-config-react-app": "^7.0.1",
+    "js-chess-viewer": "^1.0.3",
     "react": "^18.2.0",
     "react-cookie": "^4.1.1",
     "react-dom": "^18.2.0",
@@ -24,12 +25,26 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint src/**/*.{js,jsx}",
+    "format": "prettier --write \"src/**/*.{js,jsx,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,css,md}\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "src/**/*.{css,md}": [
+      "prettier --write"
+    ]
   },
   "eslintConfig": {
     "extends": [
       "react-app",
-      "react-app/jest"
+      "react-app/jest",
+      "prettier"
     ]
   },
   "browserslist": {
@@ -43,5 +58,13 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
+    "prettier": "^3.8.3",
+    "prop-types": "^15.8.1"
   }
 }

@@ -11,7 +11,7 @@ import {
   CircularProgress,
   Typography,
   Card,
-  CardContent
+  CardContent,
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
@@ -30,7 +30,7 @@ export default function SignUpForm(props) {
     usernameError: '',
     emailError: '',
     passwordError: '',
-    passwordRepeatError: ''
+    passwordRepeatError: '',
   });
   const navigate = useNavigate();
 
@@ -41,76 +41,77 @@ export default function SignUpForm(props) {
   };
 
   const onEmailChange = (e) => {
-
     setFields({ ...fields, email: e.target.value });
-  }
+  };
 
   const onPasswordChange = (e) => {
-
     setFields({ ...fields, password: e.target.value });
-  }
+  };
 
   const onPasswordRepeatChange = (e) => {
-
     setFields({ ...fields, passwordRepeat: e.target.value });
-  }
+  };
 
   const onUsernameChange = (e) => {
-
     setFields({ ...fields, username: e.target.value });
-  }
+  };
 
   const submitForm = async (e) => {
-    setLoading(true);
-
     let newFields = { ...fields };
     setFields({
       ...fields,
       usernameError: '',
       emailError: '',
       passwordError: '',
-      passwordRepeatError: ''
+      passwordRepeatError: '',
     });
 
     if (!fields.username) {
-      newFields['usernameError'] = 'Username is a required fields'
+      newFields.usernameError = 'Username is a required field';
     }
 
     if (!fields.email) {
-      newFields['emailError'] = 'Email is a required fields'
+      newFields.emailError = 'Email is a required field';
     }
 
     if (!fields.password || !fields.passwordRepeat) {
-      newFields['passwordError'] = 'Password is a required field';
-      newFields['passwordRepeatError'] = 'Passwords must match';
+      newFields.passwordError = 'Password is a required field';
+      newFields.passwordRepeatError = 'Password is a required field';
+    } else if (fields.password !== fields.passwordRepeat) {
+      newFields.passwordError = 'Passwords must match';
+      newFields.passwordRepeatError = 'Passwords must match';
     }
 
-    if (fields.password !== fields.passwordRepeat) {
-      newFields['passwordError'] = 'Passwords must match';
-      newFields['passwordRepeatError'] = 'Passwords must match';
-    }
-
-    if (newFields.usernameError || newFields.emailError || newFields.passwordError || newFields.passwordRepeatError) {
+    if (
+      newFields.usernameError ||
+      newFields.emailError ||
+      newFields.passwordError ||
+      newFields.passwordRepeatError
+    ) {
       setFields(newFields);
+      setLoading(false);
+      return;
     }
+
+    setLoading(true);
 
     let res = await signUp({
       username: fields.username,
       password: fields.password,
-      verify_password: fields.passwordRepeat,
-      email: fields.email
+      password_verify: fields.passwordRepeat,
+      email: fields.email,
     });
 
     if (!res.ok) {
-      let body = await res.json()
+      let body = await res.json();
       console.error(body);
-      setAlert("Registration failed");
+      setAlert('Registration failed');
       setLoading(false);
       return;
     }
     setLoading(false);
     navigate('/success');
-  }
+  };
 
   return (
     <Card elevation={4} sx={{ borderRadius: 3, mt: 4 }}>
@@ -122,10 +123,12 @@ export default function SignUpForm(props) {
           Create your account to get started.
         </Typography>
         <Box>
-          {alert ? <FormControl fullWidth margin='normal'>
-            <Alert severity="error">Error: {alert}</Alert>
-          </FormControl> : null}
-          <FormControl fullWidth margin='normal' error={!!fields.usernameError}>
+          {alert ? (
+            <FormControl fullWidth margin="normal">
+              <Alert severity="error">Error: {alert}</Alert>
+            </FormControl>
+          ) : null}
+          <FormControl fullWidth margin="normal" error={!!fields.usernameError}>
             <InputLabel htmlFor="outlined-adornment-username">Username</InputLabel>
             <OutlinedInput
               id="outlined-adornment-username"
@@ -134,7 +137,7 @@ export default function SignUpForm(props) {
               onChange={onUsernameChange}
             />
           </FormControl>
-          <FormControl fullWidth margin='normal' error={!!fields.emailError}>
+          <FormControl fullWidth margin="normal" error={!!fields.emailError}>
             <InputLabel htmlFor="outlined-adornment-email">Email</InputLabel>
             <OutlinedInput
               id="outlined-adornment-email"
@@ -143,7 +146,7 @@ export default function SignUpForm(props) {
               onChange={onEmailChange}
             />
           </FormControl>
-          <FormControl fullWidth margin='normal' error={!!fields.passwordError}>
+          <FormControl fullWidth margin="normal" error={!!fields.passwordError}>
             <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
             <OutlinedInput
               id="outlined-adornment-password"
@@ -165,7 +168,7 @@ export default function SignUpForm(props) {
               label="Password"
             />
           </FormControl>
-          <FormControl fullWidth margin='normal' error={!!fields.passwordRepeatError}>
+          <FormControl fullWidth margin="normal" error={!!fields.passwordRepeatError}>
             <InputLabel htmlFor="outlined-adornment-password">Repeat Password</InputLabel>
             <OutlinedInput
               id="outlined-adornment-password-repeat"
@@ -175,25 +178,30 @@ export default function SignUpForm(props) {
               label="Repeat Password"
             />
           </FormControl>
-          <FormControl fullWidth margin='normal' disabled={loading}>
-            <Button variant="contained" disableElevation onClick={submitForm}
+          <FormControl fullWidth margin="normal" disabled={loading}>
+            <Button
+              variant="contained"
+              disableElevation
+              onClick={submitForm}
               sx={{ py: 1.2, fontWeight: 'bold', borderRadius: 2 }}
             >
               Sign Up
             </Button>
-            {loading ? <CircularProgress
-              size={24}
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                marginTop: '-12px',
-                marginLeft: '-12px',
-              }}
-            /> : null}
+            {loading ? (
+              <CircularProgress
+                size={24}
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  marginTop: '-12px',
+                  marginLeft: '-12px',
+                }}
+              />
+            ) : null}
           </FormControl>
         </Box>
       </CardContent>
     </Card>
-  )
+  );
 }

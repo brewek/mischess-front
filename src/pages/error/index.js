@@ -24,5 +24,5 @@ export default function ErrorPage() {
         </Button>
       </Box>
     </Container>
-  )
+  );
 }

@@ -10,7 +10,7 @@ import {
   Button,
   Tooltip,
   MenuItem,
-  Divider
+  Divider,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -18,13 +18,11 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import { useNavigate } from 'react-router';
 import { useCookies } from 'react-cookie';
 
-
 function ResponsiveAppBar(props) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
-  // eslint-disable-next-line
-  const [cookies, setCookies, removeCookie] = useCookies();
+  const [, , removeCookie] = useCookies();
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -36,8 +34,7 @@ function ResponsiveAppBar(props) {
   const handleCloseNavMenu = (path) => {
     setAnchorElNav(null);
 
-    if (path)
-      navigate(path);
+    if (path) navigate(path);
   };
 
   const handleCloseUserMenu = () => {
@@ -47,16 +44,16 @@ function ResponsiveAppBar(props) {
   const handleSignOut = () => {
     removeCookie('token', { path: '/' });
     props.setUser(null);
-  }
+  };
 
-  const pages = [{
-    name: 'Home',
-    path: '/'
-  }];
-
-  const settings = [
-    { name: 'Settings', path: '/settings' }
+  const pages = [
+    {
+      name: 'Home',
+      path: '/',
+    },
   ];
+
+  const settings = [{ name: 'Settings', path: '/settings' }];
 
   return (
     <AppBar position="static">
@@ -92,7 +89,7 @@ function ResponsiveAppBar(props) {
               }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={() => handleCloseNavMenu(page.path)}>
+                <MenuItem key={page.name} onClick={() => handleCloseNavMenu(page.path)}>
                   <Typography textAlign="center">{page.name}</Typography>
                 </MenuItem>
               ))}
@@ -101,7 +98,7 @@ function ResponsiveAppBar(props) {
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
             {pages.map((page) => (
               <Button
-                key={page}
+                key={page.name}
                 onClick={() => handleCloseNavMenu(page.path)}
                 sx={{ my: 2, color: 'white', display: 'block' }}
               >
@@ -110,45 +107,57 @@ function ResponsiveAppBar(props) {
             ))}
           </Box>
 
-          {props.user ? <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Typography sx={{ m: 1 }}>{props.user.username}</Typography>
-              </IconButton>
-            </Tooltip>
-            <Menu
-              sx={{ mt: '45px' }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              {settings.map((setting) => (
-                <MenuItem key={setting.name} onClick={() => { handleCloseNavMenu(); navigate(setting.path); }}>
-                  <Typography textAlign="center">{setting.name}</Typography>
+          {props.user ? (
+            <Box sx={{ flexGrow: 0 }}>
+              <Tooltip title="Open settings">
+                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                  <Typography sx={{ m: 1 }}>{props.user.username}</Typography>
+                </IconButton>
+              </Tooltip>
+              <Menu
+                sx={{ mt: '45px' }}
+                id="menu-appbar"
+                anchorEl={anchorElUser}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                open={Boolean(anchorElUser)}
+                onClose={handleCloseUserMenu}
+              >
+                {settings.map((setting) => (
+                  <MenuItem
+                    key={setting.name}
+                    onClick={() => {
+                      handleCloseNavMenu();
+                      navigate(setting.path);
+                    }}
+                  >
+                    <Typography textAlign="center">{setting.name}</Typography>
+                  </MenuItem>
+                ))}
+                <Divider sx={{ mx: 1 }} />
+                <MenuItem onClick={props.handleToggleTheme}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {props.darkMode ? (
+                      <LightModeIcon fontSize="small" />
+                    ) : (
+                      <DarkModeIcon fontSize="small" />
+                    )}
+                    <Typography>{props.darkMode ? 'Light Mode' : 'Dark Mode'}</Typography>
+                  </Box>
                 </MenuItem>
-              ))}
-              <Divider sx={{ mx: 1 }} />
-              <MenuItem onClick={props.handleToggleTheme}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  {props.darkMode ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
-                  <Typography>{props.darkMode ? 'Light Mode' : 'Dark Mode'}</Typography>
-                </Box>
-              </MenuItem>
-              <MenuItem onClick={handleSignOut}>
-                <Typography textAlign="center">Sign Out</Typography>
-              </MenuItem>
-            </Menu>
-          </Box> : (
+                <MenuItem onClick={handleSignOut}>
+                  <Typography textAlign="center">Sign Out</Typography>
+                </MenuItem>
+              </Menu>
+            </Box>
+          ) : (
             <Box sx={{ flexGrow: 0 }}>
               <Tooltip title="Toggle theme">
                 <IconButton onClick={props.handleToggleTheme} color="inherit">

@@ -4,25 +4,15 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f4f6f9;
-  color: #1a1a2e;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Dark mode support via CSS variables */
-body[data-theme='dark'] {
-  background-color: #121220;
-  color: #e8e8ef;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
   background: rgba(128, 128, 128, 0.1);
   padding: 2px 4px;
   border-radius: 4px;
@@ -32,5 +22,8 @@ code {
 .MuiPaper-root,
 .MuiCard-root,
 .MuiAppBar-root {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
 }
