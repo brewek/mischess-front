@@ -64,10 +64,22 @@ async function getOpening(token, index = -1) {
   });
 }
 
+async function updateUser(token, body) {
+  return fetch(`${API_URL}/users/me`, {
+    method: 'PUT',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+}
+
 export {
   signIn,
   signUp,
   getUser,
   getGames,
-  getOpening
+  getOpening,
+  updateUser
 }

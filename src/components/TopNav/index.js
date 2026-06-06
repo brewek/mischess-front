@@ -136,7 +136,7 @@ function ResponsiveAppBar(props) {
                 </MenuItem>
               ))}
               <Divider sx={{ mx: 1 }} />
-              <MenuItem onClick={() => props.setDarkMode(!props.darkMode)}>
+              <MenuItem onClick={props.handleToggleTheme}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   {props.darkMode ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
                   <Typography>{props.darkMode ? 'Light Mode' : 'Dark Mode'}</Typography>
@@ -149,7 +149,7 @@ function ResponsiveAppBar(props) {
           </Box> : (
             <Box sx={{ flexGrow: 0 }}>
               <Tooltip title="Toggle theme">
-                <IconButton onClick={() => props.setDarkMode(!props.darkMode)} color="inherit">
+                <IconButton onClick={props.handleToggleTheme} color="inherit">
                   {props.darkMode ? <LightModeIcon /> : <DarkModeIcon />}
                 </IconButton>
               </Tooltip>
