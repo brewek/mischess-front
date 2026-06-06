@@ -379,6 +379,8 @@ export default function IndexPage(props) {
     }
   }, [isLoading]);
 
+  const myUsernames = new Set([currentUsername, ...((props.user?.accounts) || []).map(a => a.value)].filter(Boolean));
+
   if (isLoading) {
     return (
       <Container maxWidth="md" sx={{ mt: 8, mb: 4 }}>
@@ -437,15 +439,27 @@ export default function IndexPage(props) {
                           fetchOpening(cookies.token, currentUsername, originalIndex);
                         }}
                         sx={{
+                          position: 'relative',
                           pl: 3,
                           pr: 2,
                           py: 1.5,
                           borderRadius: 1,
                           mx: 1,
                           mb: 0.5,
+                          '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            inset: 0,
+                            borderRadius: 1,
+                            background: 'linear-gradient(to right, rgba(255,255,255,0.12), transparent 35%, transparent 65%, rgba(0,0,0,0.10))',
+                            pointerEvents: 'none',
+                          },
                           '&.Mui-selected': {
                             bgcolor: 'primary.light',
                             color: 'primary.contrastText',
+                            '&::before': {
+                              background: 'linear-gradient(to right, rgba(255,255,255,0.18), transparent 35%, transparent 65%, rgba(0,0,0,0.08))',
+                            },
                             '&:hover': {
                               bgcolor: 'primary.dark',
                             },
@@ -461,24 +475,39 @@ export default function IndexPage(props) {
                       >
                         <ListItemText
                           primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Typography variant="body2" fontWeight="medium" noWrap>
+                            <Box component="span" sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 0.5 }}>
+                              <Typography component="span" variant="body2" fontWeight={myUsernames.has(g.players.white.username) ? 700 : 400} noWrap sx={{ flex: '1 1 0', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left' }}>
                                 {g.players.white.username}
                               </Typography>
-                              <Chip label={`R${g.players.white.rating}`} size="small" sx={{ height: 20, fontSize: '0.65rem' }} />
+                              <Typography component="span" variant="body2" sx={{ flexShrink: 0, color: 'text.secondary' }}>
+                                vs
+                              </Typography>
+                              <Typography component="span" variant="body2" fontWeight={myUsernames.has(g.players.black.username) ? 700 : 400} noWrap sx={{ flex: '1 1 0', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'right' }}>
+                                {g.players.black.username}
+                              </Typography>
                             </Box>
                           }
+                          primaryTypographyProps={{
+                            sx: { width: '100%' },
+                          }}
                           secondary={
-                            <>
-                              <Typography component="span" variant="body2" noWrap>
-                                vs {g.players.black.username}{' '}
-                                <Chip label={`R${g.players.black.rating}`} size="small" sx={{ height: 20, fontSize: '0.65rem', ml: 0.5 }} />
+                            <Box component="span" sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, width: '100%' }}>
+                              <Box component="span" sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                                <Typography component="span" variant="caption">
+                                  {g.players.white.rating != null ? `R${g.players.white.rating}` : ''}
+                                </Typography>
+                                <Typography component="span" variant="caption">
+                                  {g.players.black.rating != null ? `R${g.players.black.rating}` : ''}
+                                </Typography>
+                              </Box>
+                              <Typography component="span" variant="caption" color="text.disabled">
+                                {new Date(g.game_ended).toISOString()}
                               </Typography>
-                              <Typography component="span" variant="caption" color="text.secondary">
-                                {'\n'}{new Date(g.game_ended).toLocaleString()}
-                              </Typography>
-                            </>
+                            </Box>
                           }
+                          secondaryTypographyProps={{
+                            sx: { mt: 0.25 },
+                          }}
                         />
                       </ListItemButton>
                       {idx < games.length - 1 && <Divider sx={{ mx: 2 }} />}
