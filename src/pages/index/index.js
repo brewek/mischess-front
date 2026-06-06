@@ -88,7 +88,7 @@ export default function IndexPage(props) {
 
       // Obsługa błędów API i brakujących danych
       if (!response.ok) {
-        console.error('Błąd pobierania partii:', response.status, response.statusText);
+        console.error('Error fetching game:', response.status, response.statusText);
 
         // Jeśli token wygasł (401) lub go brak, przekieruj do logowania
         if (response.status === 401 || !token) {
@@ -98,7 +98,7 @@ export default function IndexPage(props) {
           if (username) {
             setGame({
               fen: 'start',
-              players: { white: { username: username }, black: { username: 'Przeciwnik' } },
+              players: { white: { username: username }, black: { username: 'Opponent' } },
               pgn: '[Event "Test"]\n[White "' + username + '"]\n[Black "Przeciwnik"]\n\n',
               ended: new Date().toISOString()
             });
@@ -148,13 +148,13 @@ export default function IndexPage(props) {
 
       // Walidacja odpowiedzi - sprawdź czy mamy dane gry
       if (!lastGame || !lastGame.game || !lastGame.game.players) {
-        console.error('Nie można odczytać danych partii:', JSON.stringify(lastGame));
+        console.error('Could not read game data:', JSON.stringify(lastGame));
 
         // Jeśli użytkownik jest zalogowany, pokaż startową pozycję gry
         if (username) {
           setGame({
             fen: 'start',
-            players: { white: { username: username }, black: { username: 'Przeciwnik' } },
+            players: { white: { username: username }, black: { username: 'Opponent' } },
             pgn: '[Event "Test"]\n[White "' + username + '"]\n[Black "Przeciwnik"]\n\n',
             ended: new Date().toISOString()
           });
@@ -195,12 +195,12 @@ export default function IndexPage(props) {
         orientation: orientation,
       });
     } catch (error) {
-      console.error('Błąd sieci podczas pobierania partii:', error);
+      console.error('Network error while fetching game:', error);
       // Pokaż startową pozycję gry zamiast błędu
       if (username) {
         setGame({
           fen: 'start',
-          players: { white: { username: username }, black: { username: 'Przeciwnik' } },
+          players: { white: { username: username }, black: { username: 'Opponent' } },
           pgn: '[Event "Test"]\n[White "' + username + '"]\n[Black "Przeciwnik"]\n\n',
           ended: new Date().toISOString()
         });
@@ -239,7 +239,7 @@ export default function IndexPage(props) {
         let response = await getUser(token);
 
         if (!ignore && !response.ok) {
-          console.error('Błąd pobierania danych użytkownika:', response.status, response.statusText);
+          console.error('Error fetching user data:', response.status, response.statusText);
           // Jeśli token wygasł (401), użytkownik musi się zalogować ponownie
           if (response.status === 401) {
             navigate('/sign-in');
@@ -262,7 +262,7 @@ export default function IndexPage(props) {
           const gamesResponse = await getGames(token);
 
           if (!gamesResponse.ok) {
-            console.error('Błąd pobierania listy gier:', gamesResponse.status, gamesResponse.statusText);
+            console.error('Error fetching games list:', gamesResponse.status, gamesResponse.statusText);
 
             // Jeśli token wygasł (401), przekieruj do logowania
             if (gamesResponse.status === 401 && !cookies.token) {
@@ -277,7 +277,7 @@ export default function IndexPage(props) {
             if (me?.username) {
               setGame({
                 fen: 'start',
-                players: { white: { username: me.username }, black: { username: 'Przeciwnik' } },
+                players: { white: { username: me.username }, black: { username: 'Opponent' } },
                 pgn: '[Event "Test"]\n[White "' + me.username + '"]\n[Black "Przeciwnik"]\n\n',
                 ended: new Date().toISOString()
               });
@@ -287,7 +287,7 @@ export default function IndexPage(props) {
 
             // Walidacja - data powinna być array
             if (!Array.isArray(data)) {
-              console.error('API zwróciła nie-array:', typeof data, data);
+              console.error('API returned non-array:', typeof data, data);
               // Obsługa różnych formatów odpowiedzi
               if (data?.games && Array.isArray(data.games)) {
                 data = data.games;
@@ -327,24 +327,24 @@ export default function IndexPage(props) {
               .filter(g => {
                 const valid = g?.players?.white?.username && g?.players?.black?.username;
                 if (!valid && g) {
-                  console.warn('Gra bez poprawnych graczy (po transformacji):', g);
+                  console.warn('Game without valid players (after transformation):', g);
                 }
                 return valid;
               });
 
-            console.log('Pobrane gry:', { total: data?.length, valid: validGames.length });
+            console.log('Fetched games:', { total: data?.length, valid: validGames.length });
             setGames(validGames);
             setFilteredGames(validGames);
 
             // Jeśli nie ma gier, wyświetl komunikat zamiast pętli ładowania
             if (!validGames || validGames.length === 0) {
-              console.log('Nie masz jeszcze żadnych partii.');
+              console.log('No games found yet.');
 
               // Ustaw startową pozycję gry jeśli użytkownik jest zalogowany
               if (me?.username && selectedGameIndex === -1) {
                 setGame({
                   fen: 'start',
-                  players: { white: { username: me.username }, black: { username: 'Przeciwnik' } },
+                  players: { white: { username: me.username }, black: { username: 'Opponent' } },
                   pgn: '[Event "Test"]\n[White "' + me.username + '"]\n[Black "Przeciwnik"]\n\n',
                   ended: new Date().toISOString()
                 });
@@ -359,20 +359,20 @@ export default function IndexPage(props) {
             // Zabezpieczenie - jeśli fetchOpening nie ustawił gry, ustaw fallback
             setTimeout(() => {
               if (!ignore && (!game?.fen || !game?.players?.white?.username)) {
-                console.log('fetchOpening nie ustawił gry, ustawianie fallback');
+                console.log('fetchOpening did not set game, setting fallback');
                 setGame({
                   fen: 'start',
-                  players: { white: { username: me.username }, black: { username: 'Przeciwnik' } },
+                  players: { white: { username: me.username }, black: { username: 'Opponent' } },
                   pgn: '[Event "Test"]\n[White "' + me.username + '"]\n[Black "Przeciwnik"]\n\n',
                   ended: new Date().toISOString()
                 });
               }
             }, 2000);
           } else {
-            console.error('Błąd pobierania listy gier:', gamesResponse.status, gamesResponse.statusText);
+            console.error('Error fetching games list:', gamesResponse.status, gamesResponse.statusText);
           }
         } catch (error) {
-          console.error('Błąd podczas ładowania danych:', error);
+          console.error('Error while loading data:', error);
 
           // Jeśli token nie istnieje - przekieruj do logowania
           if (!ignore && !cookies.token) {
@@ -385,7 +385,7 @@ export default function IndexPage(props) {
             if (me?.username) {
               setGame({
                 fen: 'start',
-                players: { white: { username: me.username }, black: { username: 'Przeciwnik' } },
+                players: { white: { username: me.username }, black: { username: 'Opponent' } },
                 pgn: '[Event "Test"]\n[White "' + me.username + '"]\n[Black "Przeciwnik"]\n\n',
                 ended: new Date().toISOString()
               });
@@ -395,7 +395,7 @@ export default function IndexPage(props) {
           }
         }
       } catch (error) {
-        console.error('Błąd sieci:', error);
+        console.error('Network error:', error);
         if (!ignore) {
           navigate('/sign-in');
         }
@@ -416,7 +416,7 @@ export default function IndexPage(props) {
       const timer = setTimeout(() => {
         setGame({
           fen: 'start',
-          players: { white: { username: currentUsername }, black: { username: 'Przeciwnik' } },
+          players: { white: { username: currentUsername }, black: { username: 'Opponent' } },
           pgn: '[Event "Test"]\n[White "' + currentUsername + '"]\n[Black "Przeciwnik"]\n\n',
           ended: new Date().toISOString()
         });
@@ -434,7 +434,7 @@ export default function IndexPage(props) {
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <CircularProgress size={60} />
           <Typography variant="h6" sx={{ mt: 2 }} fontWeight="bold">
-            Ładowanie partii...
+            Loading games...
           </Typography>
         </Box>
       </Container>
@@ -444,7 +444,7 @@ export default function IndexPage(props) {
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" gutterBottom fontWeight="bold" color="primary.main">
-        Analiza partii
+        Game analysis
       </Typography>
 
       <Grid container spacing={3}>
@@ -454,10 +454,10 @@ export default function IndexPage(props) {
             <Paper elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
               <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
                 <Typography variant="h6" fontWeight="bold">
-                  Moje partie
+                  My games
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.85 }}>
-                  {filteredGames.length} z {games.length} partii
+                  {filteredGames.length} of {games.length} games
                 </Typography>
               </Box>
               <Box sx={{ p: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
@@ -468,9 +468,9 @@ export default function IndexPage(props) {
                   fullWidth
                   size="small"
                 >
-                  <ToggleButton value="all">Wszystkie</ToggleButton>
-                  <ToggleButton value="white">⬜ Biały</ToggleButton>
-                  <ToggleButton value="black">⬛ Czarny</ToggleButton>
+                  <ToggleButton value="all">All</ToggleButton>
+                  <ToggleButton value="white">⬜ White</ToggleButton>
+                  <ToggleButton value="black">⬛ Black</ToggleButton>
                 </ToggleButtonGroup>
               </Box>
               <List sx={{ maxHeight: { xs: '300px', md: height > 0 ? height : 600 }, overflow: 'auto' }}>
@@ -569,7 +569,7 @@ export default function IndexPage(props) {
                       onClick={resetArrows}
                       sx={{ borderRadius: 2, fontWeight: 'bold' }}
                     >
-                      Resetuj analizę
+                      Reset analysis
                     </Button>
                   </Box>
                 </Grid>
