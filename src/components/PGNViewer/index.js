@@ -1,29 +1,32 @@
 import { Grid, List, ListItem, ListItemButton, ListItemText, Typography } from '@mui/material';
 import { Chess } from 'chess.js';
-import { useEffect, useState, useMemo, memo } from 'react';
+import { useEffect, useState, useMemo, memo, useCallback } from 'react';
 
-function PGNViewer(props) {
+function PGNViewer({ pgn, onHistoryChange, setGameConfig, playSound, height, players }) {
   const [history, setHistory] = useState([]);
 
-  const changeFen = (idx) => {
-    props.setGameConfig((prev) => ({
-      ...prev,
-      position: history[idx].fen,
-    }));
-    if (props.playSound) {
-      props.playSound();
-    }
-  };
+  const changeFen = useCallback(
+    (idx) => {
+      setGameConfig((prev) => ({
+        ...prev,
+        position: history[idx].fen,
+      }));
+      if (playSound) {
+        playSound();
+      }
+    },
+    [history, setGameConfig, playSound]
+  );
 
   useEffect(() => {
-    if (!props.pgn) {
+    if (!pgn) {
       setHistory([]);
-      if (props.onHistoryChange) props.onHistoryChange([]);
+      if (onHistoryChange) onHistoryChange([]);
       return;
     }
 
     const chess = new Chess();
-    chess.loadPgn(props.pgn);
+    chess.loadPgn(pgn);
 
     const tempChess = new Chess();
     const moves = chess.history().map((move, idx) => {
@@ -36,8 +39,8 @@ function PGNViewer(props) {
     });
 
     setHistory(moves);
-    if (props.onHistoryChange) props.onHistoryChange(moves);
-  }, [props.pgn, props.onHistoryChange]);
+    if (onHistoryChange) onHistoryChange(moves);
+  }, [pgn, onHistoryChange]);
 
   const whiteMoves = useMemo(() => {
     if (!history) return null;
@@ -50,7 +53,7 @@ function PGNViewer(props) {
           </ListItemButton>
         </ListItem>
       ));
-  }, [history]); // changeFen depends on props.setGameConfig/playSound which are stable
+  }, [history, changeFen]);
 
   const blackMoves = useMemo(() => {
     if (!history) return null;
@@ -63,14 +66,14 @@ function PGNViewer(props) {
           </ListItemButton>
         </ListItem>
       ));
-  }, [history]);
+  }, [history, changeFen]);
 
   return (
     <Grid
       container
       spacing={2}
       style={{
-        height: props.height,
+        height: height,
         overflowX: 'hidden',
         overflowY: 'scroll',
         marginTop: '1px',
@@ -84,7 +87,7 @@ function PGNViewer(props) {
           }}
         >
           <Typography align="center" variant="caption">
-            {props.players ? props.players.white.username : null}
+            {players ? players.white.username : null}
           </Typography>
         </div>
         <List dense>{whiteMoves}</List>
@@ -97,7 +100,7 @@ function PGNViewer(props) {
           }}
         >
           <Typography align="center" variant="caption">
-            {props.players ? props.players.black.username : null}
+            {players ? players.black.username : null}
           </Typography>
         </div>
         <List dense>{blackMoves}</List>

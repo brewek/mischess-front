@@ -35,3 +35,10 @@ jobs:
 
     - name: Build the app
       run: npm run build
+
+    - name: Generate Job Summary
+      run: |
+        echo "### CI Build Summary 🚀" >> $GITHUB_STEP_SUMMARY
+        echo "- **Node version**: \${{ matrix.node-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Status**: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+        echo "Code is formatted, linted, and ready to go!" >> $GITHUB_STEP_SUMMARY
