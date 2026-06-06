@@ -15,7 +15,6 @@ import {
   ListItemButton,
   ListItemText,
   Divider,
-  Chip,
   ToggleButtonGroup,
   ToggleButton,
   CircularProgress,
@@ -500,7 +499,7 @@ export default function IndexPage(props) {
                                   {g.players.black.rating != null ? `R${g.players.black.rating}` : ''}
                                 </Typography>
                               </Box>
-                              <Typography component="span" variant="caption" color="text.disabled">
+                              <Typography component="span" variant="caption" sx={{ textAlign: 'center', opacity: 0.55 }}>
                                 {new Date(g.game_ended).toISOString()}
                               </Typography>
                             </Box>
