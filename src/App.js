@@ -12,6 +12,7 @@ import SignInPage from './pages/sign-in';
 import SignUpPage from './pages/sign-up';
 import ErrorPage from './pages/error';
 import SuccessPage from './pages/success';
+import SettingsPage from './pages/settings';
 import { lightTheme, darkTheme } from './theme';
 import { useCookies } from 'react-cookie';
 import { updateUser } from './helpers/api';
@@ -62,6 +63,7 @@ function App() {
           <Route path="/sign-in" element={<SignInPage />} />
           <Route path="/success" element={<SuccessPage />} />
           <Route path="/error" element={<ErrorPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

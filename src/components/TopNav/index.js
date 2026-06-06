@@ -36,7 +36,7 @@ function ResponsiveAppBar(props) {
   const handleCloseNavMenu = (path) => {
     setAnchorElNav(null);
 
-    if (!path)
+    if (path)
       navigate(path);
   };
 
@@ -54,7 +54,9 @@ function ResponsiveAppBar(props) {
     path: '/'
   }];
 
-  const settings = [];
+  const settings = [
+    { name: 'Settings', path: '/settings' }
+  ];
 
   return (
     <AppBar position="static">
@@ -131,8 +133,8 @@ function ResponsiveAppBar(props) {
               onClose={handleCloseUserMenu}
             >
               {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">{setting}</Typography>
+                <MenuItem key={setting.name} onClick={() => { handleCloseNavMenu(); navigate(setting.path); }}>
+                  <Typography textAlign="center">{setting.name}</Typography>
                 </MenuItem>
               ))}
               <Divider sx={{ mx: 1 }} />

@@ -75,11 +75,23 @@ async function updateUser(token, body) {
   });
 }
 
+async function changePassword(token, body) {
+  return fetch(`${API_URL}/users/me/password`, {
+    method: 'PUT',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+}
+
 export {
   signIn,
   signUp,
   getUser,
   getGames,
   getOpening,
-  updateUser
+  updateUser,
+  changePassword
 }
