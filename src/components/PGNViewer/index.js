@@ -10,6 +10,9 @@ export default function PGNViewer(props) {
       ...props.gameConfig,
       position: history[idx].fen,
     });
+    if (props.playSound) {
+      props.playSound();
+    }
   };
 
   useEffect(() => {

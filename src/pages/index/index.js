@@ -152,9 +152,15 @@ export default function IndexPage({ user, setUser }) {
     }
   }, [gameConfig.position, game, getArrows]);
 
+  const playSound = useCallback(() => {
+    const audio = new Audio('/move.mp3');
+    audio.play().catch((err) => console.log('Audio error:', err));
+  }, []);
+
   const goToStart = useCallback(() => {
     setGameConfig((prev) => ({ ...prev, position: game?.game?.fen || 'start' }));
-  }, [game]);
+    playSound();
+  }, [game, playSound]);
 
   const goPrevious = useCallback(() => {
     if (history.length === 0) return;
@@ -164,8 +170,9 @@ export default function IndexPage({ user, setUser }) {
       goToStart();
     } else {
       setGameConfig((prev) => ({ ...prev, position: history[currentIdx - 1].fen }));
+      playSound();
     }
-  }, [history, gameConfig.position, goToStart]);
+  }, [history, gameConfig.position, goToStart, playSound]);
 
   const goNext = useCallback(() => {
     if (history.length === 0) return;
@@ -173,17 +180,20 @@ export default function IndexPage({ user, setUser }) {
     if (currentIdx === history.length - 1) return; // already at end
     const nextIdx = currentIdx === -1 ? 0 : currentIdx + 1;
     setGameConfig((prev) => ({ ...prev, position: history[nextIdx].fen }));
-  }, [history, gameConfig.position]);
+    playSound();
+  }, [history, gameConfig.position, playSound]);
 
   const goToEnd = useCallback(() => {
     if (history.length === 0) return;
     setGameConfig((prev) => ({ ...prev, position: history[history.length - 1].fen }));
-  }, [history]);
+    playSound();
+  }, [history, playSound]);
 
   const resetArrows = useCallback(() => {
     const fenPosition = game?.game?.fen || 'start';
     setGameConfig((prev) => ({ ...prev, position: fenPosition }));
-  }, [game]);
+    playSound();
+  }, [game, playSound]);
 
   const fetchOpening = useCallback(
     async (token, username, index = -1, currentUserObj = null) => {
@@ -487,6 +497,7 @@ export default function IndexPage({ user, setUser }) {
                       clearArrows={clearArrows}
                       resetArrows={resetArrows}
                       onHistoryChange={setHistory}
+                      playSound={playSound}
                     />
                   </Box>
                   <Box
