@@ -18,6 +18,7 @@ import {
   Chip,
   ToggleButtonGroup,
   ToggleButton,
+  CircularProgress,
 } from "@mui/material";
 import { getOpening, getUser, getGames } from "../../helpers/api";
 
@@ -44,6 +45,7 @@ export default function IndexPage(props) {
   const [pgn, setPgn] = useState('');
   const [arrows, setArrows] = useState([]);
   const [height, setHeight] = useState(0);
+  const [currentUsername, setCurrentUsername] = useState(null);
   const navigate = useNavigate();
   const boardRef = useRef();
 
@@ -58,9 +60,9 @@ export default function IndexPage(props) {
   }
 
   const getArrows = (lastGame) => {
-    if (!lastGame || !lastGame.expected_moves) return [];
+    if (!lastGame || !Array.isArray(lastGame.expected_moves)) return [];
     let arrows = lastGame.expected_moves.map((item) => createArrow(item, 'green'));
-    if (lastGame.move_played) {
+    if (typeof lastGame.move_played === 'string') {
       arrows = arrows.concat(createArrow(lastGame.move_played, 'red'));
     }
     return arrows
@@ -71,50 +73,131 @@ export default function IndexPage(props) {
   }
 
   const resetArrows = () => {
+    // Użyj FEN z gry lub domyślnej pozycji startowej jeśli nie ma FEN
+    let fenPosition = game?.game?.fen || 'start';
     setGameConfig({
       ...gameConfig,
-      position: game.fen,
+      position: fenPosition,
     })
     setArrows(getArrows(game));
   }
 
   const fetchOpening = async (token, username, index = -1) => {
-    let response = await getOpening(token, index);
-    if (!response.ok) {
-      console.error(response);
-      return;
+    try {
+      let response = await getOpening(token, index);
+
+      // Obsługa błędów API i brakujących danych
+      if (!response.ok) {
+        console.error('Błąd pobierania partii:', response.status, response.statusText);
+
+        // Jeśli token wygasł (401) lub go brak, przekieruj do logowania
+        if (response.status === 401 || !token) {
+          navigate('/sign-in');
+        } else {
+          // Dla innych błędów - ustaw startową pozycję gry
+          if (username) {
+            setGame({
+              fen: 'start',
+              players: { white: { username: username }, black: { username: 'Przeciwnik' } },
+              pgn: '[Event "Test"]\n[White "' + username + '"]\n[Black "Przeciwnik"]\n\n',
+              ended: new Date().toISOString()
+            });
+          }
+        }
+        return;
+      }
+
+      let lastGame = await response.json();
+
+      // Walidacja odpowiedzi - obsługa pustych partii i brakujących danych
+      if (!lastGame ||
+        ((!Array.isArray(lastGame.games)) && !lastGame.game)) {
+        console.error('Niepoprawna struktura API:', JSON.stringify(lastGame));
+
+        // Jeśli użytkownik jest zalogowany, pokaż startową pozycję gry
+        if (username) {
+          setGame({
+            fen: 'start',
+            players: { white: { username: username }, black: { username: 'Przeciwnik' } },
+            pgn: '[Event "Test"]\n[White "' + username + '"]\n[Black "Przeciwnik"]\n\n',
+            ended: new Date().toISOString()
+          });
+        } else {
+          navigate('/error');
+        }
+        return;
+      }
+
+      // Pobierz właściwą partię z odpowiedzi (obsługa różnych formatów API)
+      let gameData = lastGame.games?.[index] || lastGame.game || null;
+
+      // Normalize gameData - może mieć zagnieżdżone "game" pole lub nie
+      if (gameData && !gameData.game && gameData.fen) {
+        gameData = { game: gameData };
+      }
+
+      if (!gameData || !gameData.game || !gameData.game.players) {
+        console.error('Brak danych o partii:', JSON.stringify(lastGame));
+
+        // Jeśli nie ma żadnych gier, ale użytkownik jest zalogowany - pokaż startową pozycję
+        if (username && index === -1) {
+          setGame({
+            fen: 'start',
+            players: { white: { username: username }, black: { username: 'Przeciwnik' } },
+            pgn: '[Event "Test"]\n[White "' + username + '"]\n[Black "Przeciwnik"]\n\n',
+            ended: new Date().toISOString()
+          });
+        } else {
+          navigate('/error');
+        }
+        return;
+      }
+
+      setArrows(getArrows(lastGame));
+
+      // Ustaw graczy z zabezpieczeniem przed błędami
+      let whitePlayer = lastGame.game.players?.white || {};
+      let blackPlayer = lastGame.game.players?.black || {};
+
+      setPlayers({
+        white: whitePlayer.username || 'White',
+        black: blackPlayer.username || 'Black'
+      })
+      setPgn(lastGame.game.pgn);
+      // Ustaw orientację z zabezpieczeniem przed błędami
+      let orientation = lastGame.game.players?.white?.username === username ? 'white' :
+        lastGame.game.players?.black?.username === username ? 'black' :
+          (lastGame.orientation || 'white');
+
+      // Normalizuj grę - ustaw top-level fen i players dla compatibility
+      setGame({
+        fen: lastGame.fen || lastGame.game?.fen || 'start',
+        players: lastGame.players || lastGame.game?.players,
+        game: lastGame,
+        pgn: lastGame.pgn || lastGame.game?.pgn,
+        ended: lastGame.ended || lastGame.game?.ended,
+      });
+
+      setGameConfig({
+        ...gameConfig,
+        position: lastGame.fen || lastGame.game?.fen || 'start',
+        orientation: orientation,
+      });
+    } catch (error) {
+      console.error('Błąd sieci podczas pobierania partii:', error);
+      // Pokaż startową pozycję gry zamiast błędu
+      if (username) {
+        setGame({
+          fen: 'start',
+          players: { white: { username: username }, black: { username: 'Przeciwnik' } },
+          pgn: '[Event "Test"]\n[White "' + username + '"]\n[Black "Przeciwnik"]\n\n',
+          ended: new Date().toISOString()
+        });
+      }
     }
-
-    let lastGame = await response.json();
-
-    setGame(lastGame);
-    setArrows(getArrows(lastGame));
-
-    if (!lastGame) {
-      navigate('/error');
-      return;
-    }
-
-    setPlayers({
-      white: lastGame.game.players.white,
-      black: lastGame.game.players.black
-    })
-    setPgn(lastGame.game.pgn);
-    setGameConfig({
-      ...gameConfig,
-      position: lastGame.fen,
-      orientation: lastGame.game.players.white.username === username ? 'white' : 'black',
-    });
   }
 
-  const fetchGamesList = async (token) => {
-    let response = await getGames(token);
-    if (response.ok) {
-      let data = await response.json();
-      setGames(data);
-      setFilteredGames(data);
-    }
-  }
+  // Funkcja nie jest już używana - usunięta w celu eliminacji warningu ESLint
 
   const handleFilterChange = (event, newFilter) => {
     if (newFilter === null) return;
@@ -122,9 +205,9 @@ export default function IndexPage(props) {
 
     let filtered = games;
     if (newFilter === 'white') {
-      filtered = games.filter(g => g.players.white.username === props.user?.username);
+      filtered = games.filter(g => g.players.white.username === currentUsername);
     } else if (newFilter === 'black') {
-      filtered = games.filter(g => g.players.black.username === props.user?.username);
+      filtered = games.filter(g => g.players.black.username === currentUsername);
     }
     setFilteredGames(filtered);
     setSelectedGameIndex(-1);
@@ -134,23 +217,128 @@ export default function IndexPage(props) {
     let ignore = false;
 
     async function checkAuthenticated() {
-      const token = cookies.token;
-      let response = await getUser(token);
+      try {
+        const token = cookies.token;
 
-      if (!ignore) {
-        if (!response.ok) {
+        if (!token) {
           navigate('/sign-in');
+          return;
+        }
+
+        let response = await getUser(token);
+
+        if (!ignore && !response.ok) {
+          console.error('Błąd pobierania danych użytkownika:', response.status, response.statusText);
+          // Jeśli token wygasł (401), użytkownik musi się zalogować ponownie
+          if (response.status === 401) {
+            navigate('/sign-in');
+          } else {
+            navigate('/error');
+          }
           return;
         }
 
         let me = await response.json();
         props.setUser(me);
+        setCurrentUsername(me.username);
 
         if (boardRef.current) {
           setHeight(boardRef.current.offsetHeight);
         }
-        await fetchGamesList(token);
-        fetchOpening(token, me.username, -1);
+
+        // Pobierz listę gier i pierwszą partię
+        try {
+          const gamesResponse = await getGames(token);
+
+          if (!gamesResponse.ok) {
+            console.error('Błąd pobierania listy gier:', gamesResponse.status, gamesResponse.statusText);
+
+            // Jeśli token wygasł (401), przekieruj do logowania
+            if (gamesResponse.status === 401 && !cookies.token) {
+              navigate('/sign-in');
+              return;
+            }
+
+            // Dla innych błędów - ustaw startową pozycję gry
+            setGames([]);
+            setFilteredGames([]);
+
+            if (me?.username) {
+              setGame({
+                fen: 'start',
+                players: { white: { username: me.username }, black: { username: 'Przeciwnik' } },
+                pgn: '[Event "Test"]\n[White "' + me.username + '"]\n[Black "Przeciwnik"]\n\n',
+                ended: new Date().toISOString()
+              });
+            }
+          } else if (gamesResponse.ok) {
+            let data = await gamesResponse.json();
+            setGames(data || []);
+            setFilteredGames(data || []);
+
+            // Jeśli nie ma gier, wyświetl komunikat zamiast pętli ładowania
+            if (!data || data.length === 0) {
+              console.log('Nie masz jeszcze żadnych partii.');
+
+              // Ustaw startową pozycję gry jeśli użytkownik jest zalogowany
+              if (me?.username && selectedGameIndex === -1) {
+                setGame({
+                  fen: 'start',
+                  players: { white: { username: me.username }, black: { username: 'Przeciwnik' } },
+                  pgn: '[Event "Test"]\n[White "' + me.username + '"]\n[Black "Przeciwnik"]\n\n',
+                  ended: new Date().toISOString()
+                });
+              } else {
+                navigate('/error');
+              }
+            }
+
+            // Pobierz pierwszą partię (lub ostatnią jeśli to nie jest startowa pozycja)
+            await fetchOpening(token, me.username, -1);
+
+            // Zabezpieczenie - jeśli fetchOpening nie ustawił gry, ustaw fallback
+            setTimeout(() => {
+              if (!ignore && (!game?.fen || !game?.players?.white?.username)) {
+                console.log('fetchOpening nie ustawił gry, ustawianie fallback');
+                setGame({
+                  fen: 'start',
+                  players: { white: { username: me.username }, black: { username: 'Przeciwnik' } },
+                  pgn: '[Event "Test"]\n[White "' + me.username + '"]\n[Black "Przeciwnik"]\n\n',
+                  ended: new Date().toISOString()
+                });
+              }
+            }, 2000);
+          } else {
+            console.error('Błąd pobierania listy gier:', gamesResponse.status, gamesResponse.statusText);
+          }
+        } catch (error) {
+          console.error('Błąd podczas ładowania danych:', error);
+
+          // Jeśli token nie istnieje - przekieruj do logowania
+          if (!ignore && !cookies.token) {
+            navigate('/sign-in');
+          } else {
+            setGames([]);
+            setFilteredGames([]);
+
+            // Ustaw startową pozycję gry jeśli użytkownik jest zalogowany
+            if (me?.username) {
+              setGame({
+                fen: 'start',
+                players: { white: { username: me.username }, black: { username: 'Przeciwnik' } },
+                pgn: '[Event "Test"]\n[White "' + me.username + '"]\n[Black "Przeciwnik"]\n\n',
+                ended: new Date().toISOString()
+              });
+            } else {
+              navigate('/error');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Błąd sieci:', error);
+        if (!ignore) {
+          navigate('/sign-in');
+        }
       }
     }
 
@@ -162,6 +350,36 @@ export default function IndexPage(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cookies.token]);
 
+  // Fallback - jeśli gra nie załaduje się prawidłowo, upewnij się że coś jest wyświetlane
+  useEffect(() => {
+    if (currentUsername && !game?.fen && !game?.players?.white?.username) {
+      const timer = setTimeout(() => {
+        setGame({
+          fen: 'start',
+          players: { white: { username: currentUsername }, black: { username: 'Przeciwnik' } },
+          pgn: '[Event "Test"]\n[White "' + currentUsername + '"]\n[Black "Przeciwnik"]\n\n',
+          ended: new Date().toISOString()
+        });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentUsername, game]);
+
+
+  const isLoading = !game?.fen && !game?.players?.white?.username;
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="md" sx={{ mt: 8, mb: 4 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <CircularProgress size={60} />
+          <Typography variant="h6" sx={{ mt: 2 }} fontWeight="bold">
+            Ładowanie partii...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -205,7 +423,7 @@ export default function IndexPage(props) {
                         onClick={() => {
                           const originalIndex = games.indexOf(g);
                           setSelectedGameIndex(idx);
-                          fetchOpening(cookies.token, props.user?.username, originalIndex);
+                          fetchOpening(cookies.token, currentUsername, originalIndex);
                         }}
                         sx={{
                           pl: 3,
