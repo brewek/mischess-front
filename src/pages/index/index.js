@@ -73,7 +73,6 @@ export default function IndexPage(props) {
   }
 
   const resetArrows = () => {
-    // Użyj FEN z gry lub domyślnej pozycji startowej jeśli nie ma FEN
     let fenPosition = game?.game?.fen || 'start';
     setGameConfig({
       ...gameConfig,
@@ -86,15 +85,12 @@ export default function IndexPage(props) {
     try {
       let response = await getOpening(token, index);
 
-      // Obsługa błędów API i brakujących danych
       if (!response.ok) {
         console.error('Error fetching game:', response.status, response.statusText);
 
-        // Jeśli token wygasł (401) lub go brak, przekieruj do logowania
         if (response.status === 401 || !token) {
           navigate('/sign-in');
         } else {
-          // Dla innych błędów - ustaw startową pozycję gry
           if (username) {
             setGame({
               fen: 'start',
@@ -109,15 +105,13 @@ export default function IndexPage(props) {
 
       let lastGame = await response.json();
 
-      // === NORMALIZACJA ODPOWIEDZI API ===
-      // Obsługa różnych formatów odpowiedzi
+      // === API RESPONSE NORMALIZATION ===
+      // Handle different API response formats
 
-      // Jeśli odpowiedź zawiera tablicę gier bez pola game - wyciągnij grę z indeksu
       if (lastGame && Array.isArray(lastGame.games) && !lastGame.game) {
         lastGame.game = lastGame.games[index] || null;
       }
 
-      // Jeśli odpowiedź jest płaska (bez wrappera game) - utwórz wrapper
       if (lastGame && !lastGame.game && !Array.isArray(lastGame.games)) {
         if (lastGame.players || lastGame.fen) {
           lastGame = {
@@ -134,23 +128,19 @@ export default function IndexPage(props) {
         }
       }
 
-      // Jeśli gra nie ma graczy, spróbuj odzyskać z listy gier
       if (lastGame?.game && !lastGame.game.players && Array.isArray(games) && games[index]) {
         lastGame.game.players = games[index].players;
       }
 
-      // Uzupełnij brakujące pola z listy gier
       if (lastGame?.game && Array.isArray(games) && games[index]) {
         if (!lastGame.game.fen) lastGame.game.fen = games[index].fen;
         if (!lastGame.game.pgn) lastGame.game.pgn = games[index].pgn;
         if (!lastGame.game.ended) lastGame.game.ended = games[index].game_ended;
       }
 
-      // Walidacja odpowiedzi - sprawdź czy mamy dane gry
       if (!lastGame || !lastGame.game || !lastGame.game.players) {
         console.error('Could not read game data:', JSON.stringify(lastGame));
 
-        // Jeśli użytkownik jest zalogowany, pokaż startową pozycję gry
         if (username) {
           setGame({
             fen: 'start',
@@ -166,7 +156,6 @@ export default function IndexPage(props) {
 
       setArrows(getArrows(lastGame));
 
-      // Ustaw graczy z zabezpieczeniem przed błędami
       let whitePlayer = lastGame.game.players?.white || {};
       let blackPlayer = lastGame.game.players?.black || {};
 
@@ -175,12 +164,10 @@ export default function IndexPage(props) {
         black: blackPlayer.username || 'Black'
       })
       setPgn(lastGame.game.pgn);
-      // Ustaw orientację z zabezpieczeniem przed błędami
       let orientation = lastGame.game.players?.white?.username === username ? 'white' :
         lastGame.game.players?.black?.username === username ? 'black' :
           (lastGame.orientation || 'white');
 
-      // Normalizuj grę - ustaw top-level fen i players dla compatibility
       setGame({
         fen: lastGame.fen || lastGame.game?.fen || 'start',
         players: lastGame.players || lastGame.game?.players,
@@ -196,7 +183,6 @@ export default function IndexPage(props) {
       });
     } catch (error) {
       console.error('Network error while fetching game:', error);
-      // Pokaż startową pozycję gry zamiast błędu
       if (username) {
         setGame({
           fen: 'start',
@@ -207,8 +193,6 @@ export default function IndexPage(props) {
       }
     }
   }
-
-  // Funkcja nie jest już używana - usunięta w celu eliminacji warningu ESLint
 
   const handleFilterChange = (event, newFilter) => {
     if (newFilter === null) return;
@@ -240,7 +224,6 @@ export default function IndexPage(props) {
 
         if (!ignore && !response.ok) {
           console.error('Error fetching user data:', response.status, response.statusText);
-          // Jeśli token wygasł (401), użytkownik musi się zalogować ponownie
           if (response.status === 401) {
             navigate('/sign-in');
           } else {
@@ -253,24 +236,17 @@ export default function IndexPage(props) {
         props.setUser(me);
         setCurrentUsername(me.username);
 
-        if (boardRef.current) {
-          setHeight(boardRef.current.offsetHeight);
-        }
-
-        // Pobierz listę gier i pierwszą partię
         try {
           const gamesResponse = await getGames(token);
 
           if (!gamesResponse.ok) {
             console.error('Error fetching games list:', gamesResponse.status, gamesResponse.statusText);
 
-            // Jeśli token wygasł (401), przekieruj do logowania
             if (gamesResponse.status === 401 && !cookies.token) {
               navigate('/sign-in');
               return;
             }
 
-            // Dla innych błędów - ustaw startową pozycję gry
             setGames([]);
             setFilteredGames([]);
 
@@ -285,10 +261,8 @@ export default function IndexPage(props) {
           } else if (gamesResponse.ok) {
             let data = await gamesResponse.json();
 
-            // Walidacja - data powinna być array
             if (!Array.isArray(data)) {
               console.error('API returned non-array:', typeof data, data);
-              // Obsługa różnych formatów odpowiedzi
               if (data?.games && Array.isArray(data.games)) {
                 data = data.games;
               } else if (data?.data && Array.isArray(data.data)) {
@@ -298,26 +272,20 @@ export default function IndexPage(props) {
               }
             }
 
-            // Walidacja struktury gier - obsługa różnych formatów API
             const validGames = (data || [])
               .map(g => {
-                // Normalizuj strukturę - obsługuj różne formaty
-                // Format 1: {players: {white, black}} - prawidłowy
                 if (g?.players?.white?.username && g?.players?.black?.username) {
                   return g;
                 }
 
-                // Format 2: {white, black} - transformuj
                 if (g?.white?.username && g?.black?.username) {
                   return { ...g, players: { white: g.white, black: g.black } };
                 }
 
-                // Format 3: {game: {players: {white, black}}} - wyodrębnij
                 if (g?.game?.players?.white?.username && g?.game?.players?.black?.username) {
                   return { ...g, players: g.game.players };
                 }
 
-                // Format 4: {game: {white, black}} - transformuj
                 if (g?.game?.white?.username && g?.game?.black?.username) {
                   return { ...g, players: { white: g.game.white, black: g.game.black } };
                 }
@@ -332,15 +300,10 @@ export default function IndexPage(props) {
                 return valid;
               });
 
-            console.log('Fetched games:', { total: data?.length, valid: validGames.length });
             setGames(validGames);
             setFilteredGames(validGames);
 
-            // Jeśli nie ma gier, wyświetl komunikat zamiast pętli ładowania
             if (!validGames || validGames.length === 0) {
-              console.log('No games found yet.');
-
-              // Ustaw startową pozycję gry jeśli użytkownik jest zalogowany
               if (me?.username && selectedGameIndex === -1) {
                 setGame({
                   fen: 'start',
@@ -353,35 +316,19 @@ export default function IndexPage(props) {
               }
             }
 
-            // Pobierz pierwszą partię (lub ostatnią jeśli to nie jest startowa pozycja)
             await fetchOpening(token, me.username, -1);
-
-            // Zabezpieczenie - jeśli fetchOpening nie ustawił gry, ustaw fallback
-            setTimeout(() => {
-              if (!ignore && (!game?.fen || !game?.players?.white?.username)) {
-                console.log('fetchOpening did not set game, setting fallback');
-                setGame({
-                  fen: 'start',
-                  players: { white: { username: me.username }, black: { username: 'Opponent' } },
-                  pgn: '[Event "Test"]\n[White "' + me.username + '"]\n[Black "Przeciwnik"]\n\n',
-                  ended: new Date().toISOString()
-                });
-              }
-            }, 2000);
           } else {
             console.error('Error fetching games list:', gamesResponse.status, gamesResponse.statusText);
           }
         } catch (error) {
           console.error('Error while loading data:', error);
 
-          // Jeśli token nie istnieje - przekieruj do logowania
           if (!ignore && !cookies.token) {
             navigate('/sign-in');
           } else {
             setGames([]);
             setFilteredGames([]);
 
-            // Ustaw startową pozycję gry jeśli użytkownik jest zalogowany
             if (me?.username) {
               setGame({
                 fen: 'start',
@@ -410,7 +357,6 @@ export default function IndexPage(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cookies.token]);
 
-  // Fallback - jeśli gra nie załaduje się prawidłowo, upewnij się że coś jest wyświetlane
   useEffect(() => {
     if (currentUsername && !game?.fen && !game?.players?.white?.username) {
       const timer = setTimeout(() => {
@@ -425,8 +371,13 @@ export default function IndexPage(props) {
     }
   }, [currentUsername, game]);
 
-
   const isLoading = !game?.fen && !game?.players?.white?.username;
+
+  useEffect(() => {
+    if (!isLoading && boardRef.current) {
+      setHeight(boardRef.current.offsetHeight);
+    }
+  }, [isLoading]);
 
   if (isLoading) {
     return (

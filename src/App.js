@@ -30,7 +30,6 @@ function App() {
 
   React.useEffect(() => {
     if (user && typeof user.dark_mode === 'boolean') {
-      console.log('Loaded dark_mode from server:', user.dark_mode);
       setDarkMode(user.dark_mode);
       localStorage.setItem('darkMode', JSON.stringify(user.dark_mode));
     }
@@ -43,16 +42,12 @@ function App() {
     if (user && cookies.token) {
       try {
         const res = await updateUser(cookies.token, { dark_mode: newDarkMode });
-        if (res.ok) {
-          console.log('Theme saved to server:', newDarkMode);
-        } else {
+        if (!res.ok) {
           console.error('Failed to save theme to server:', res.status, await res.text());
         }
       } catch (err) {
         console.error('Failed to save theme preference:', err);
       }
-    } else {
-      console.log('Theme saved to localStorage only (user not logged in or no token)');
     }
   };
 
