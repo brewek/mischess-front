@@ -109,38 +109,49 @@ export default function IndexPage(props) {
 
       let lastGame = await response.json();
 
-      // Walidacja odpowiedzi - obsługa pustych partii i brakujących danych
-      if (!lastGame ||
-        ((!Array.isArray(lastGame.games)) && !lastGame.game)) {
-        console.error('Niepoprawna struktura API:', JSON.stringify(lastGame));
+      // === NORMALIZACJA ODPOWIEDZI API ===
+      // Obsługa różnych formatów odpowiedzi
+
+      // Jeśli odpowiedź zawiera tablicę gier bez pola game - wyciągnij grę z indeksu
+      if (lastGame && Array.isArray(lastGame.games) && !lastGame.game) {
+        lastGame.game = lastGame.games[index] || null;
+      }
+
+      // Jeśli odpowiedź jest płaska (bez wrappera game) - utwórz wrapper
+      if (lastGame && !lastGame.game && !Array.isArray(lastGame.games)) {
+        if (lastGame.players || lastGame.fen) {
+          lastGame = {
+            game: {
+              players: lastGame.players,
+              fen: lastGame.fen,
+              pgn: lastGame.pgn,
+              ended: lastGame.ended,
+            },
+            expected_moves: lastGame.expected_moves,
+            move_played: lastGame.move_played,
+            orientation: lastGame.orientation,
+          };
+        }
+      }
+
+      // Jeśli gra nie ma graczy, spróbuj odzyskać z listy gier
+      if (lastGame?.game && !lastGame.game.players && Array.isArray(games) && games[index]) {
+        lastGame.game.players = games[index].players;
+      }
+
+      // Uzupełnij brakujące pola z listy gier
+      if (lastGame?.game && Array.isArray(games) && games[index]) {
+        if (!lastGame.game.fen) lastGame.game.fen = games[index].fen;
+        if (!lastGame.game.pgn) lastGame.game.pgn = games[index].pgn;
+        if (!lastGame.game.ended) lastGame.game.ended = games[index].game_ended;
+      }
+
+      // Walidacja odpowiedzi - sprawdź czy mamy dane gry
+      if (!lastGame || !lastGame.game || !lastGame.game.players) {
+        console.error('Nie można odczytać danych partii:', JSON.stringify(lastGame));
 
         // Jeśli użytkownik jest zalogowany, pokaż startową pozycję gry
         if (username) {
-          setGame({
-            fen: 'start',
-            players: { white: { username: username }, black: { username: 'Przeciwnik' } },
-            pgn: '[Event "Test"]\n[White "' + username + '"]\n[Black "Przeciwnik"]\n\n',
-            ended: new Date().toISOString()
-          });
-        } else {
-          navigate('/error');
-        }
-        return;
-      }
-
-      // Pobierz właściwą partię z odpowiedzi (obsługa różnych formatów API)
-      let gameData = lastGame.games?.[index] || lastGame.game || null;
-
-      // Normalize gameData - może mieć zagnieżdżone "game" pole lub nie
-      if (gameData && !gameData.game && gameData.fen) {
-        gameData = { game: gameData };
-      }
-
-      if (!gameData || !gameData.game || !gameData.game.players) {
-        console.error('Brak danych o partii:', JSON.stringify(lastGame));
-
-        // Jeśli nie ma żadnych gier, ale użytkownik jest zalogowany - pokaż startową pozycję
-        if (username && index === -1) {
           setGame({
             fen: 'start',
             players: { white: { username: username }, black: { username: 'Przeciwnik' } },
@@ -273,11 +284,62 @@ export default function IndexPage(props) {
             }
           } else if (gamesResponse.ok) {
             let data = await gamesResponse.json();
-            setGames(data || []);
-            setFilteredGames(data || []);
+
+            // Walidacja - data powinna być array
+            if (!Array.isArray(data)) {
+              console.error('API zwróciła nie-array:', typeof data, data);
+              // Obsługa różnych formatów odpowiedzi
+              if (data?.games && Array.isArray(data.games)) {
+                data = data.games;
+              } else if (data?.data && Array.isArray(data.data)) {
+                data = data.data;
+              } else {
+                data = [];
+              }
+            }
+
+            // Walidacja struktury gier - obsługa różnych formatów API
+            const validGames = (data || [])
+              .map(g => {
+                // Normalizuj strukturę - obsługuj różne formaty
+                let normalized = g;
+
+                // Format 1: {players: {white, black}} - prawidłowy
+                if (g?.players?.white?.username && g?.players?.black?.username) {
+                  return g;
+                }
+
+                // Format 2: {white, black} - transformuj
+                if (g?.white?.username && g?.black?.username) {
+                  return { ...g, players: { white: g.white, black: g.black } };
+                }
+
+                // Format 3: {game: {players: {white, black}}} - wyodrębnij
+                if (g?.game?.players?.white?.username && g?.game?.players?.black?.username) {
+                  return { ...g, players: g.game.players };
+                }
+
+                // Format 4: {game: {white, black}} - transformuj
+                if (g?.game?.white?.username && g?.game?.black?.username) {
+                  return { ...g, players: { white: g.game.white, black: g.game.black } };
+                }
+
+                return null;
+              })
+              .filter(g => {
+                const valid = g?.players?.white?.username && g?.players?.black?.username;
+                if (!valid && g) {
+                  console.warn('Gra bez poprawnych graczy (po transformacji):', g);
+                }
+                return valid;
+              });
+
+            console.log('Pobrane gry:', { total: data?.length, valid: validGames.length });
+            setGames(validGames);
+            setFilteredGames(validGames);
 
             // Jeśli nie ma gier, wyświetl komunikat zamiast pętli ładowania
-            if (!data || data.length === 0) {
+            if (!validGames || validGames.length === 0) {
               console.log('Nie masz jeszcze żadnych partii.');
 
               // Ustaw startową pozycję gry jeśli użytkownik jest zalogowany
