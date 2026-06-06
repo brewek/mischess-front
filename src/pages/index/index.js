@@ -302,8 +302,6 @@ export default function IndexPage(props) {
             const validGames = (data || [])
               .map(g => {
                 // Normalizuj strukturę - obsługuj różne formaty
-                let normalized = g;
-
                 // Format 1: {players: {white, black}} - prawidłowy
                 if (g?.players?.white?.username && g?.players?.black?.username) {
                   return g;
