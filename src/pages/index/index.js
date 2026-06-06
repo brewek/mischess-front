@@ -297,7 +297,8 @@ export default function IndexPage(props) {
                   console.warn('Game without valid players (after transformation):', g);
                 }
                 return valid;
-              });
+              })
+              .reverse();
 
             setGames(validGames);
             setFilteredGames(validGames);
@@ -427,7 +428,7 @@ export default function IndexPage(props) {
               </Box>
               <List sx={{ maxHeight: { xs: '300px', md: height > 0 ? height : 600 }, overflow: 'auto' }}>
                 {filteredGames.map((g, idx) => {
-                  const isSelected = selectedGameIndex === -1 ? idx === filteredGames.length - 1 : idx === selectedGameIndex;
+                  const isSelected = selectedGameIndex === -1 ? idx === 0 : idx === selectedGameIndex;
                   return (
                     <Box key={idx}>
                       <ListItemButton
