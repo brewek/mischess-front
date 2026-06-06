@@ -61,13 +61,47 @@ function uciToSan(fen, uciLine) {
 }
 
 export default function useChessEngine() {
-  const [engineType, setEngineType] = useState('stockfish');
+  const [engineType, setEngineTypeState] = useState(
+    () => localStorage.getItem('chessEngineType') || 'stockfish'
+  );
+  const [engineDepth, setEngineDepthState] = useState(
+    () => parseInt(localStorage.getItem('chessEngineDepth'), 10) || 15
+  );
+  const [engineMultiPv, setEngineMultiPvState] = useState(
+    () => parseInt(localStorage.getItem('chessEngineMultiPv'), 10) || 3
+  );
+
+  const setEngineType = useCallback((type) => {
+    localStorage.setItem('chessEngineType', type);
+    setEngineTypeState(type);
+  }, []);
+
+  const setEngineDepth = useCallback((depth) => {
+    localStorage.setItem('chessEngineDepth', depth);
+    setEngineDepthState(depth);
+  }, []);
+
+  const setEngineMultiPv = useCallback((pv) => {
+    localStorage.setItem('chessEngineMultiPv', pv);
+    setEngineMultiPvState(pv);
+  }, []);
   const [isEnabled, setIsEnabled] = useState(false);
   const [evaluation, setEvaluation] = useState(null);
   const workerRef = useRef(null);
   const positionFenRef = useRef('start');
 
+  const evalTimeoutRef = useRef(null);
+  const uiUpdateTimeoutRef = useRef(null);
+
   const stopEngine = useCallback(() => {
+    if (evalTimeoutRef.current) {
+      clearTimeout(evalTimeoutRef.current);
+      evalTimeoutRef.current = null;
+    }
+    if (uiUpdateTimeoutRef.current) {
+      clearTimeout(uiUpdateTimeoutRef.current);
+      uiUpdateTimeoutRef.current = null;
+    }
     if (workerRef.current) {
       workerRef.current.terminate();
       workerRef.current = null;
@@ -77,16 +111,21 @@ export default function useChessEngine() {
   const evaluatePosition = useCallback(
     (fen) => {
       positionFenRef.current = fen;
-      if (workerRef.current && isEnabled) {
-        workerRef.current.postMessage('stop');
-        workerRef.current.postMessage('ucinewgame');
-        workerRef.current.postMessage(
-          `position fen ${fen === 'start' ? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1' : fen}`
-        );
-        workerRef.current.postMessage('go depth 15');
+      if (evalTimeoutRef.current) {
+        clearTimeout(evalTimeoutRef.current);
       }
+      evalTimeoutRef.current = setTimeout(() => {
+        if (workerRef.current && isEnabled) {
+          workerRef.current.postMessage('stop');
+          workerRef.current.postMessage('ucinewgame');
+          workerRef.current.postMessage(
+            `position fen ${fen === 'start' ? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1' : fen}`
+          );
+          workerRef.current.postMessage(`go depth ${engineDepth}`);
+        }
+      }, 300);
     },
-    [isEnabled]
+    [isEnabled, engineDepth]
   );
 
   const evalLinesRef = useRef([]);
@@ -112,35 +151,48 @@ export default function useChessEngine() {
           if (scoreMatch && pvMatch) {
             const type = scoreMatch[1];
             const val = parseInt(scoreMatch[2], 10);
+
+            const turn = positionFenRef.current.split(' ')[1] || 'w';
+            let absVal = val;
+            if (turn === 'b') absVal = -val;
+
             let scoreStr = '';
             if (type === 'cp') {
-              scoreStr = (val / 100).toFixed(2);
-              if (val > 0) scoreStr = '+' + scoreStr;
+              scoreStr = (absVal / 100).toFixed(2);
+              if (absVal > 0) scoreStr = '+' + scoreStr;
             } else {
-              scoreStr = 'M' + Math.abs(val);
-              if (val < 0) scoreStr = '-' + scoreStr;
+              let mateIn = Math.abs(val);
+              scoreStr = 'M' + mateIn;
+              if (absVal < 0) scoreStr = '-' + scoreStr;
+              else if (absVal > 0) scoreStr = '+' + scoreStr;
             }
 
             const rawPv = pvMatch[1].trim();
             evalLinesRef.current[multiPvIndex] = {
               score: scoreStr,
+              cpVal: type === 'cp' ? val : val > 0 ? 10000 - Math.abs(val) : -10000 + Math.abs(val),
               pv: uciToSan(positionFenRef.current, rawPv),
               firstMove: rawPv.split(' ')[0],
             };
 
-            setEvaluation([...evalLinesRef.current].filter(Boolean));
+            if (!uiUpdateTimeoutRef.current) {
+              uiUpdateTimeoutRef.current = setTimeout(() => {
+                setEvaluation([...evalLinesRef.current].filter(Boolean));
+                uiUpdateTimeoutRef.current = null;
+              }, 150);
+            }
           }
         }
       };
 
       worker.postMessage('uci');
-      worker.postMessage('setoption name MultiPV value 3');
+      worker.postMessage(`setoption name MultiPV value ${engineMultiPv}`);
       worker.postMessage('isready');
       if (positionFenRef.current) {
         evaluatePosition(positionFenRef.current);
       }
     },
-    [engineType, stopEngine, evaluatePosition]
+    [engineType, engineMultiPv, stopEngine, evaluatePosition]
   );
 
   useEffect(() => {
@@ -164,6 +216,10 @@ export default function useChessEngine() {
     toggleEngine,
     engineType,
     setEngineType,
+    engineDepth,
+    setEngineDepth,
+    engineMultiPv,
+    setEngineMultiPv,
     evaluation,
     evaluatePosition,
   };

@@ -1,8 +1,30 @@
-import React from 'react';
-import { Box, Typography, Switch, Select, MenuItem } from '@mui/material';
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Switch,
+  Select,
+  MenuItem,
+  IconButton,
+  Collapse,
+  TextField,
+} from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 export default function EngineControls({ engineHook }) {
-  const { isEnabled, toggleEngine, engineType, setEngineType, evaluation } = engineHook;
+  const {
+    isEnabled,
+    toggleEngine,
+    engineType,
+    setEngineType,
+    engineDepth,
+    setEngineDepth,
+    engineMultiPv,
+    setEngineMultiPv,
+    evaluation,
+  } = engineHook;
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const evalArray = Array.isArray(evaluation) ? evaluation : [];
   const topEvaluation = evalArray[0];
@@ -35,21 +57,7 @@ export default function EngineControls({ engineHook }) {
         </Box>
 
         {isEnabled && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Select
-              size="small"
-              value={engineType}
-              onChange={(e) => setEngineType(e.target.value)}
-              sx={{ minWidth: 90, height: 28, fontSize: '0.8rem' }}
-            >
-              <MenuItem value="stockfish" sx={{ fontSize: '0.8rem' }}>
-                Stockfish
-              </MenuItem>
-              <MenuItem value="lozza" sx={{ fontSize: '0.8rem' }}>
-                Lozza
-              </MenuItem>
-            </Select>
-
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography
               variant="body2"
               sx={{
@@ -61,9 +69,88 @@ export default function EngineControls({ engineHook }) {
             >
               {topEvaluation ? topEvaluation.score : '...'}
             </Typography>
+            <IconButton
+              size="small"
+              onClick={() => setSettingsOpen(!settingsOpen)}
+              color={settingsOpen ? 'primary' : 'default'}
+              sx={{ p: 0.5 }}
+            >
+              <SettingsIcon fontSize="small" />
+            </IconButton>
           </Box>
         )}
       </Box>
+
+      {isEnabled && (
+        <Collapse in={settingsOpen}>
+          <Box
+            sx={{
+              mt: 1,
+              p: 1,
+              bgcolor: 'action.hover',
+              borderRadius: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography variant="caption">Engine:</Typography>
+              <Select
+                size="small"
+                value={engineType}
+                onChange={(e) => setEngineType(e.target.value)}
+                sx={{ minWidth: 100, height: 24, fontSize: '0.75rem' }}
+              >
+                <MenuItem value="stockfish" sx={{ fontSize: '0.75rem' }}>
+                  Stockfish
+                </MenuItem>
+                <MenuItem value="lozza" sx={{ fontSize: '0.75rem' }}>
+                  Lozza
+                </MenuItem>
+              </Select>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography variant="caption">Max Depth:</Typography>
+              <TextField
+                type="number"
+                size="small"
+                value={engineDepth}
+                onChange={(e) => setEngineDepth(parseInt(e.target.value, 10))}
+                inputProps={{
+                  min: 1,
+                  max: 99,
+                  style: {
+                    padding: '2px 8px',
+                    fontSize: '0.75rem',
+                    width: '40px',
+                    textAlign: 'center',
+                  },
+                }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography variant="caption">Lines (MultiPV):</Typography>
+              <TextField
+                type="number"
+                size="small"
+                value={engineMultiPv}
+                onChange={(e) => setEngineMultiPv(parseInt(e.target.value, 10))}
+                inputProps={{
+                  min: 1,
+                  max: 10,
+                  style: {
+                    padding: '2px 8px',
+                    fontSize: '0.75rem',
+                    width: '40px',
+                    textAlign: 'center',
+                  },
+                }}
+              />
+            </Box>
+          </Box>
+        </Collapse>
+      )}
 
       {isEnabled && (
         <Box
@@ -93,7 +180,7 @@ export default function EngineControls({ engineHook }) {
 
       {isEnabled && evalArray.length > 0 && (
         <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          {evalArray.slice(0, 3).map((line, idx) => (
+          {evalArray.slice(0, engineMultiPv).map((line, idx) => (
             <Box
               key={idx}
               sx={{

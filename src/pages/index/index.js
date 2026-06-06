@@ -159,16 +159,31 @@ export default function IndexPage({ user, setUser }) {
       baseArrows = getArrows(game);
     }
 
-    if (engineEnabled && Array.isArray(engineEval)) {
-      engineEval.forEach((line, idx) => {
+    if (engineEnabled && Array.isArray(engineEval) && engineEval.length > 0) {
+      engineEval.forEach((line) => {
         if (
           line &&
           line.firstMove &&
           typeof line.firstMove === 'string' &&
           line.firstMove.length >= 4
         ) {
-          const colors = ['blue', 'cornflowerblue', 'lightblue'];
-          baseArrows.push(createArrow(line.firstMove, colors[idx] || 'lightblue'));
+          let color = 'gray';
+          if (typeof line.cpVal === 'number') {
+            const absCp = Math.abs(line.cpVal);
+            let saturation = 0;
+
+            if (absCp <= 100) {
+              saturation = (absCp / 100) * 15;
+            } else if (absCp <= 1000) {
+              saturation = 15 + ((absCp - 100) / 900) * 85;
+            } else {
+              saturation = 100;
+            }
+
+            const hue = line.cpVal >= 0 ? 120 : 0;
+            color = `hsl(${hue}, ${saturation}%, 50%)`;
+          }
+          baseArrows.push(createArrow(line.firstMove, color));
         }
       });
     }
